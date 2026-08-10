@@ -3,9 +3,12 @@ spring:
     name: switchwon-payment
 
   datasource:
-    url: jdbc:mysql://localhost:13306/switchwon?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
-    username: switchwon
-    password: switchwon
+    # 별도 DB가 제공되지 않으므로 In-Memory H2를 쓴다(과제 명세 Tech Stack).
+    # DB_CLOSE_DELAY=-1 로 마지막 커넥션이 닫혀도 스키마가 유지된다.
+    url: jdbc:h2:mem:switchwon;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
     hikari:
       maximum-pool-size: 10
 
@@ -20,14 +23,18 @@ spring:
 
   flyway:
     enabled: true
-    baseline-on-migrate: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
 server:
   port: 18080
 
 payment:
   gateway:
-    base-url: http://localhost:18080/stub/pg
+    base-url: http://localhost:18080/not-used
     connect-timeout: 1s
     read-timeout: 3s
   reconcile:

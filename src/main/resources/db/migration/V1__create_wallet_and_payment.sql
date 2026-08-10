@@ -1,36 +1,38 @@
+-- 지갑
+-- balance 는 금액 정밀도 보장을 위해 DECIMAL 을 쓴다. DOUBLE 은 이진 부동소수라 원장에 쓸 수 없다.
 CREATE TABLE wallet
 (
     id         BIGINT         NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    currency   CHAR(3)        NOT NULL COMMENT 'ISO 4217 통화 코드',
-    balance    DECIMAL(19, 4) NOT NULL COMMENT '금액 정밀도 보장을 위해 DECIMAL 사용',
+    currency   CHAR(3)        NOT NULL,
+    balance    DECIMAL(19, 4) NOT NULL,
     created_at TIMESTAMP(6)   NOT NULL,
     updated_at TIMESTAMP(6)   NOT NULL,
     CONSTRAINT ck_wallet_balance_non_negative CHECK (balance >= 0)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
+);
 
+-- 결제 원장
+-- payment_no 는 3rd party 가 생성하며 조회 키이자 멱등 키다(docs/adr/0002).
+-- external_transaction_id, external_response_code, retriable 은 명세에 없는 컬럼이다.
+-- 실패 이력을 CS 문의 대응에 쓰려면 게이트웨이 대조와 재시도 안내가 가능해야 한다.
 CREATE TABLE payment
 (
     id                      BIGINT         NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    payment_no              VARCHAR(64)    NOT NULL COMMENT '3rd party가 생성. 조회 키이자 멱등 키',
+    payment_no              VARCHAR(64)    NOT NULL,
     wallet_id               BIGINT         NOT NULL,
     amount                  DECIMAL(19, 4) NOT NULL,
     currency                CHAR(3)        NOT NULL,
-    status                  VARCHAR(16)    NOT NULL COMMENT 'PENDING/COMPLETED/FAILED/UNKNOWN',
-    failure_reason          VARCHAR(32)     NULL COMMENT '실패 시에만 채워진다',
-    retriable               BOOLEAN         NULL COMMENT '실패가 재시도 가능한지. CS 안내 기준',
-    external_transaction_id VARCHAR(64)     NULL COMMENT 'PG사 대조 문의용',
-    external_response_code  VARCHAR(32)     NULL COMMENT 'PG사 대조 문의용',
-    requested_at            TIMESTAMP(6)    NULL COMMENT '외부 호출 시작 시각',
-    responded_at            TIMESTAMP(6)    NULL COMMENT '외부 응답 수신 시각',
+    status                  VARCHAR(16)    NOT NULL,
+    failure_reason          VARCHAR(32)     NULL,
+    retriable               BOOLEAN         NULL,
+    external_transaction_id VARCHAR(64)     NULL,
+    external_response_code  VARCHAR(32)     NULL,
+    requested_at            TIMESTAMP(6)    NULL,
+    responded_at            TIMESTAMP(6)    NULL,
     created_at              TIMESTAMP(6)   NOT NULL,
     updated_at              TIMESTAMP(6)   NOT NULL,
     CONSTRAINT uk_payment_no UNIQUE (payment_no),
     CONSTRAINT ck_payment_amount_positive CHECK (amount > 0)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
+);
 
 CREATE INDEX idx_payment_status_created_at ON payment (status, created_at);
 CREATE INDEX idx_payment_wallet_id ON payment (wallet_id);

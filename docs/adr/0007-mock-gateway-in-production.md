@@ -27,7 +27,7 @@ src/main/.../gateway/
 └── HttpPaymentGatewayClient      @Profile("real")  실제 연동
 ```
 
-`MockPaymentGatewayClient`가 기본이다. 별도 설정 없이 앱을 띄우면 이 구현이 동작한다. 평가자는 저장소를 클론해 `docker compose up`만 하면 결제 전 경로를 눌러볼 수 있다.
+`MockPaymentGatewayClient`가 기본이다. 별도 설정 없이 앱을 띄우면 이 구현이 동작한다. 평가자는 저장소를 클론해 `./gradlew bootRun` 한 줄로 결제 전 경로를 눌러볼 수 있다.
 
 `HttpPaymentGatewayClient`는 실제 게이트웨이가 생겼을 때를 위한 구현이다. `real` 프로파일에서만 활성화된다. 두 구현은 배타적이라 한쪽이 뜨면 다른 쪽은 생성되지 않는다.
 
