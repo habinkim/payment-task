@@ -12,7 +12,7 @@
 | [0004](0004-timeout-is-indoubt.md) | 타임아웃은 실패가 아니라 결과 미상으로 다룬다 | Accepted |
 | [0005](0005-pre-check-balance-before-external-call.md) | 명세 시퀀스를 지키되 잔액 사전검증을 추가한다 | Accepted |
 | [0006](0006-single-server-no-middleware.md) | 단일 서버로 시작하고 미들웨어를 도입하지 않는다 | Accepted |
-| [0007](0007-pg-stub-three-layers.md) | PG 스텁은 용도에 따라 세 층으로 나눈다 | Accepted |
+| [0007](0007-gateway-stub-three-layers.md) | 게이트웨이 스텁은 용도에 따라 세 층으로 나눈다 | Accepted |
 
 ## 결정들의 관계
 
