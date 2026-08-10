@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: switchwon-payment
+
+  datasource:
+    url: jdbc:mysql://localhost:13306/switchwon?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+    username: switchwon
+    password: switchwon
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: 18080
+
+payment:
+  gateway:
+    base-url: http://localhost:18080/stub/pg
+    connect-timeout: 1s
+    read-timeout: 3s
+  reconcile:
+    fixed-delay: 60s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+logging:
+  level:
+    root: INFO
+    com.switchwon.payment: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+logging:
+  level:
+    root: WARN
+    com.switchwon.payment: INFO
