@@ -8,6 +8,10 @@ spring:
     console:
       enabled: false
 
+payment:
+  reconcile:
+    enabled: true
+
 logging:
   level:
     root: WARN

@@ -17,6 +17,7 @@ public class PaymentMetrics {
     private static final String RESULT = "payment.result";
     private static final String ORPHAN = "payment.orphan.total";
     private static final String GATEWAY_DURATION = "gateway.approve.duration";
+    private static final String RECONCILE = "payment.reconcile";
     private static final String NONE = "none";
 
     private final MeterRegistry registry;
@@ -32,6 +33,10 @@ public class PaymentMetrics {
         registry.counter(ORPHAN).increment();
         log.warn("외부 승인 후 잔액 차감에 실패했습니다. paymentNo={}, walletId={}, externalTransactionId={}",
                 payment.paymentNo(), payment.walletId(), payment.externalTransactionId());
+    }
+
+    public void recordReconcile(String result) {
+        registry.counter(RECONCILE, "result", result).increment();
     }
 
     public Timer.Sample startGatewayTimer() {
