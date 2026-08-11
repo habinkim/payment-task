@@ -2,7 +2,7 @@ package com.switchwon.payment.payment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.switchwon.payment.payment.controller.dto.PaymentRequest;
-import com.switchwon.payment.wallet.infra.WalletStore;
+import com.switchwon.payment.wallet.domain.WalletStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

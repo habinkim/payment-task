@@ -115,9 +115,17 @@ class ArchitectureTest {
         }
 
         @Test
-        @DisplayName("저장소 캡슐은 인프라 패키지에만 존재한다")
-        void storeResidesInInfra() {
-            classes().that().haveSimpleNameEndingWith("Store")
+        @DisplayName("저장소 인터페이스는 도메인 패키지에만 존재한다")
+        void storeInterfaceResidesInDomain() {
+            classes().that().haveSimpleNameEndingWith("Store").and().areInterfaces()
+                    .should().resideInAPackage("..domain..")
+                    .check(classesUnderTest);
+        }
+
+        @Test
+        @DisplayName("저장소 구현은 인프라 패키지에만 존재한다")
+        void storeImplementationResidesInInfra() {
+            classes().that().haveSimpleNameEndingWith("Store").and().areNotInterfaces()
                     .should().resideInAPackage("..infra..")
                     .check(classesUnderTest);
         }

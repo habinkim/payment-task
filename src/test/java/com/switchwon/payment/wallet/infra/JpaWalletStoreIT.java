@@ -2,7 +2,7 @@ package com.switchwon.payment.wallet.infra;
 
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentStatus;
-import com.switchwon.payment.payment.infra.PaymentLedgerStore;
+import com.switchwon.payment.payment.domain.PaymentLedgerStore;
 import com.switchwon.payment.wallet.domain.Wallet;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,10 +17,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-class WalletStoreIT {
+class JpaWalletStoreIT {
 
     @Autowired
-    private WalletStore store;
+    private JpaWalletStore store;
 
     @Autowired
     private PaymentLedgerStore ledgerStore;
