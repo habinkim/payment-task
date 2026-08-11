@@ -28,6 +28,11 @@ dependencies {
 
     implementation 'com.h2database:h2:2.3.232'
 
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.wiremock:wiremock-standalone:3.13.1'
     testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.1'

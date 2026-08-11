@@ -2,12 +2,7 @@ package com.switchwon.payment.wallet.domain;
 
 import java.math.BigDecimal;
 
-/**
- * 도메인 예외다. 프레임워크 타입에 의존하지 않는다.
- * HTTP 응답으로의 변환은 서비스 계층에서 ApiException 으로 옮겨 담아 처리한다.
- */
 public class InsufficientBalanceException extends RuntimeException {
-
     private final Long walletId;
     private final BigDecimal balance;
     private final BigDecimal requested;

@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PaymentTest {
-
     private static final Instant NOW = Instant.parse("2026-08-11T00:00:00Z");
 
     private Payment newPayment() {
