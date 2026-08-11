@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;
 
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -90,7 +92,6 @@ class ArchitectureTest {
         void serviceDoesNotTouchRepository() {
             noClasses().that().haveSimpleNameEndingWith("Service")
                     .should().dependOnClassesThat().areAssignableTo(Repository.class)
-                    .allowEmptyShould(true)
                     .check(classesUnderTest);
         }
 
@@ -99,7 +100,6 @@ class ArchitectureTest {
         void controllerDoesNotTouchRepository() {
             noClasses().that().haveSimpleNameEndingWith("Controller")
                     .should().dependOnClassesThat().areAssignableTo(Repository.class)
-                    .allowEmptyShould(true)
                     .check(classesUnderTest);
         }
 
@@ -107,8 +107,9 @@ class ArchitectureTest {
         @DisplayName("컨트롤러는 엔티티를 노출하지 않는다")
         void controllerDoesNotExposeEntity() {
             noClasses().that().haveSimpleNameEndingWith("Controller")
-                    .should().dependOnClassesThat().haveSimpleNameEndingWith("Entity")
-                    .allowEmptyShould(true)
+                    .should().dependOnClassesThat(
+                            resideInAPackage("com.switchwon.payment..")
+                                    .and(simpleNameEndingWith("Entity")))
                     .check(classesUnderTest);
         }
 
@@ -125,6 +126,23 @@ class ArchitectureTest {
         void entityResidesInInfra() {
             classes().that().haveSimpleNameEndingWith("Entity")
                     .should().resideInAPackage("..infra..")
+                    .check(classesUnderTest);
+        }
+
+        @Test
+        @DisplayName("오케스트레이터는 저장소를 직접 잡지 않는다")
+        void orchestratorDoesNotTouchStore() {
+            noClasses().that().haveSimpleName("PaymentService")
+                    .should().dependOnClassesThat().haveSimpleNameEndingWith("Store")
+                    .check(classesUnderTest);
+        }
+
+        @Test
+        @DisplayName("트랜잭션 경계는 전용 서비스에만 존재한다")
+        void transactionalOnlyInTransactionService() {
+            noClasses().that().haveSimpleName("PaymentService")
+                    .should().dependOnClassesThat()
+                    .haveFullyQualifiedName("org.springframework.transaction.annotation.Transactional")
                     .check(classesUnderTest);
         }
     }
