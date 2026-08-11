@@ -65,6 +65,7 @@ scalar:
   path: /scalar
   page-title: 스위치원 결제 API
   dark-mode: true
+  telemetry: false
 
 ---
 spring:
