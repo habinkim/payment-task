@@ -4,13 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.regex.Pattern;
 
-/**
- * 결제 원장.
- * 상태 전이 규칙과 불변식을 이 객체가 직접 소유한다.
- * 서비스는 트랜잭션 경계를 긋고 이 객체를 조립할 뿐, 전이 가능 여부를 판단하지 않는다.
- */
 public class Payment {
-
     private static final Pattern PAYMENT_NO = Pattern.compile("^[A-Za-z0-9-]{1,64}$");
     private static final int CURRENCY_LENGTH = 3;
 
@@ -48,7 +42,21 @@ public class Payment {
         this.status = PaymentStatus.PENDING;
     }
 
-    /** 외부 호출 직전에 호출한다. 응답 지연을 추적하기 위한 시각이다. */
+    public static Payment restore(String paymentNo, Long walletId, BigDecimal amount, String currency,
+                                  PaymentStatus status, FailureReason failureReason, Boolean retriable,
+                                  String externalTransactionId, String externalResponseCode,
+                                  Instant requestedAt, Instant respondedAt) {
+        Payment payment = new Payment(paymentNo, walletId, amount, currency);
+        payment.status = status;
+        payment.failureReason = failureReason;
+        payment.retriable = retriable;
+        payment.externalTransactionId = externalTransactionId;
+        payment.externalResponseCode = externalResponseCode;
+        payment.requestedAt = requestedAt;
+        payment.respondedAt = respondedAt;
+        return payment;
+    }
+
     public void markRequested(Instant requestedAt) {
         this.requestedAt = requestedAt;
     }
@@ -71,10 +79,6 @@ public class Payment {
         this.respondedAt = respondedAt;
     }
 
-    /**
-     * 외부 승인 여부를 알 수 없는 상태로 남긴다.
-     * 실패가 아니라 결과 미상이므로 잔액을 차감하지 않으며, 조회로 확정해야 한다.
-     */
     public void markUnknown(String externalResponseCode, Instant respondedAt) {
         transitionTo(PaymentStatus.UNKNOWN);
         this.failureReason = FailureReason.SYSTEM_ERROR;

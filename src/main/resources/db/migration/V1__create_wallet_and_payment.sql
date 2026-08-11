@@ -3,7 +3,7 @@
 CREATE TABLE wallet
 (
     id         BIGINT         NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    currency   CHAR(3)        NOT NULL,
+    currency   VARCHAR(3)     NOT NULL,
     balance    DECIMAL(19, 4) NOT NULL,
     created_at TIMESTAMP(6)   NOT NULL,
     updated_at TIMESTAMP(6)   NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE payment
     payment_no              VARCHAR(64)    NOT NULL,
     wallet_id               BIGINT         NOT NULL,
     amount                  DECIMAL(19, 4) NOT NULL,
-    currency                CHAR(3)        NOT NULL,
+    currency                VARCHAR(3)     NOT NULL,
     status                  VARCHAR(16)    NOT NULL,
     failure_reason          VARCHAR(32)     NULL,
     retriable               BOOLEAN         NULL,

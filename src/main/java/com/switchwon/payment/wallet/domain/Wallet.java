@@ -2,15 +2,7 @@ package com.switchwon.payment.wallet.domain;
 
 import java.math.BigDecimal;
 
-/**
- * 선불 충전형 지갑.
- * 잔액 판정과 증감 규칙을 이 객체가 소유한다.
- *
- * 동시 요청 상황의 차감은 이 객체가 아니라 조건부 UPDATE 로 처리한다(docs/adr/0003).
- * 여기의 withdraw 는 단건 도메인 규칙을 표현하며, 경쟁 조건 방어는 저장소 계층의 책임이다.
- */
 public class Wallet {
-
     private static final int CURRENCY_LENGTH = 3;
 
     private final Long id;
@@ -48,7 +40,6 @@ public class Wallet {
         this.balance = balance.subtract(amount);
     }
 
-    /** 결제 통화가 지갑 통화와 다르면 처리할 수 없다. 환전은 이 시스템의 범위가 아니다. */
     public boolean supports(String requestCurrency) {
         return currency.equals(requestCurrency);
     }
