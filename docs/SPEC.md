@@ -18,7 +18,7 @@
 | S1 | 빌드와 공통 계층 | ☑ |
 | S2 | 도메인 모델 (`Payment`, `Wallet`) | ☑ |
 | S3 | 영속 계층 (엔티티, 리포지토리, 캡슐) | ☑ |
-| S4 | 게이트웨이 연동 (`Mock`, `Http`) | ☐ |
+| S4 | 게이트웨이 연동 (`Mock`, `Http`) | ◐ |
 | S5 | 결제 처리 서비스 | ☐ |
 | S6 | 지갑 충전과 차감 | ☐ |
 | S7 | 조회 API (단건, 목록) | ☐ |
@@ -447,10 +447,12 @@ Mock은 결과를 만들고 WireMock은 설정을 검증한다. #6~#8은 HTTP �
 
 ### 9.1 구현체
 
-| 구현 | 프로파일 | 역할 |
+| 구현 | 활성 조건 | 역할 |
 |---|---|---|
-| `MockPaymentGatewayClient` | 기본 (`!real`) | 시나리오 판정. 앱의 정상 동작 경로 |
-| `HttpPaymentGatewayClient` | `real` | 실제 연동. 통합 테스트 대상 |
+| `MockPaymentGatewayClient` | `payment.gateway.mode=mock` (기본) | 시나리오 판정. 앱의 정상 동작 경로 |
+| `HttpPaymentGatewayClient` | `payment.gateway.mode=real` | 실제 연동. 통합 테스트 대상 |
+
+전환은 스프링 프로파일이 아니라 설정 키로 한다. 프로파일은 실행 환경 전체를 가르므로 게이트웨이 구현이라는 좁은 관심사를 묶기에 적합하지 않다(ADR 0007).
 
 ### 9.2 시나리오 트리거
 
@@ -504,5 +506,6 @@ Mock은 결과를 만들고 WireMock은 설정을 검증한다. #6~#8은 HTTP �
 | 날짜 | 내용 |
 |---|---|
 | 2026-08-11 | 최초 작성. 명세 요구사항 추적표 도입, 지갑 충전(§5.6) 누락 발견하여 추가 |
+| 2026-08-11 | S4 모의 게이트웨이 완료. 전환 수단을 스프링 프로파일에서 `payment.gateway.mode` 설정 키로 변경. 로깅 설정을 추가하고 `-PshowSql` 로 테스트에서 SQL을 볼 수 있게 함 |
 | 2026-08-11 | S3 영속 계층 완료. 도메인과 JPA 엔티티를 분리하고(ADR 0008) 잔액 증감을 조건부 UPDATE로 처리. `currency`를 `CHAR`에서 `VARCHAR`로 교정 — `CHAR`는 짧은 값에 공백을 채워 비교가 어긋난다 |
 | 2026-08-11 | S2 도메인 모델 완료. 도메인 클래스를 `payment/domain`, `wallet/domain` 하위 패키지로 배치. 검증은 계층별로 분리하여 도메인은 생성자 불변식, 요청 DTO는 Bean Validation을 쓴다 |
