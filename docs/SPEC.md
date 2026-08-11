@@ -20,7 +20,7 @@
 | S3 | 영속 계층 (엔티티, 리포지토리, 저장소 인터페이스와 구현) | ☑ |
 | S4 | 게이트웨이 연동 (모의 구현, 장애 주입) | ☑ |
 | S5 | 결제 처리 서비스 | ☑ |
-| S6 | 지갑 충전과 차감 | ☐ |
+| S6 | 지갑 충전과 차감 | ☑ |
 | S7 | 조회 API (단건, 목록) | ☑ |
 | S8 | 정합성 확인 (`UNKNOWN` 확정) | ☑ |
 | S9 | 아키텍처 테스트와 시나리오 검증 | ☐ |
@@ -184,6 +184,19 @@ Flyway가 소유한다. JPA는 `validate`만 한다.
 | 2 | USD | 10.0000 | 잔액 부족 시나리오 |
 | 3 | JPY | 50000.0000 | 다통화 확인 |
 
+### V3 — `wallet_charge` ☑
+
+충전 이력. 상세는 `src/main/resources/db/migration/V3__create_wallet_charge.sql` 참조.
+
+| 결정 | 이유 |
+|---|---|
+| `charge_no VARCHAR(64)` UNIQUE | 멱등 키. `payment_no`와 같은 원리이며 동시 요청의 직렬화 지점 |
+| **`status` 컬럼 없음** | 외부 승인이 없어 중간 상태가 존재하지 않는다. 성공하면 행이 있고 실패하면 롤백된다 |
+| `CHECK (amount > 0)` | 0원·음수 충전 차단. 도메인 검증과 이중 방어 |
+| `idx_wallet_charge_wallet_id` | 지갑별 이력 조회 대비 |
+
+`payment`와 달리 갱신 컬럼(`updated_at`)이 없다. 충전 이력은 한 번 기록되면 바뀌지 않는다.
+
 ---
 
 ## 5. API
@@ -317,7 +330,7 @@ POST /api/v1/admin/payments/{paymentNo}/reconcile
 
 스케줄러도 같은 로직을 주기적으로 실행한다. 주기는 `payment.reconcile.fixed-delay`로 설정한다.
 
-### 5.6 지갑 충전 ☐
+### 5.6 지갑 충전 ☑
 
 ```
 POST /api/v1/wallets/{walletId}/charge
@@ -333,7 +346,11 @@ POST /api/v1/wallets/{walletId}/charge
 
 충전은 외부 게이트웨이를 거치지 않는다. 이 과제의 외부 연동 대상은 결제 승인이고, 충전 수단(계좌이체·카드) 연동은 범위 밖이다.
 
-> **미확정** — 충전 이력을 별도 테이블로 남길지, `payment` 테이블에 유형 컬럼을 두어 함께 다룰지 정하지 않았다. 결정 시 §4에 V3을 추가한다.
+**이력은 별도 테이블(`wallet_charge`)에 남긴다.** `payment` 테이블 14개 컬럼 중 6개가 게이트웨이 전용(`status`, `failure_reason`, `retriable`, `external_transaction_id`, `external_response_code`, `requested_at`/`responded_at`)이라 충전이 쓰면 전부 NULL로 남는다. 도메인도 마찬가지다 — `Payment`의 `markRequested()`·`recordExternalApproval()`·`markUnknown()`은 충전에서 호출할 수 없다.
+
+`wallet_charge`에는 **`status` 컬럼을 두지 않는다.** 결제에 `PENDING`이 필요했던 이유는 "요청은 보냈는데 결과를 모른다"가 존재하기 때문이다([ADR 0004](adr/0004-timeout-is-indoubt.md)). 충전은 외부 호출이 없어 이력 기록과 잔액 증가가 한 트랜잭션에서 끝나므로 중간 상태가 존재할 수 없다.
+
+**같은 `chargeNo` 재요청은 200과 최초 이력을 반환한다.** 결제처럼 409를 쓰지 않는 이유도 같다 — 처리 중이라는 상태가 없으므로 성공했거나 행이 없거나 둘 뿐이다. 방어는 선조회와 `uk_wallet_charge_no` UNIQUE 두 단계이며, 동시 요청의 실제 직렬화 지점은 UNIQUE 제약이다.
 
 ---
 
@@ -516,6 +533,7 @@ HTTP 타임아웃 설정(`connect-timeout`, `read-timeout`)은 향할 대상이 
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-08-12 | S6 지갑 충전 완료. `POST /api/v1/wallets/{walletId}/charge` 추가하고 이력을 `wallet_charge`(V3)에 별도 저장. `chargeNo` UNIQUE로 멱등을 보장하며 중복 요청은 409가 아니라 200과 최초 이력을 반환 |
 | 2026-08-11 | 저장소를 도메인 인터페이스와 인프라 구현으로 분리(ADR 0010). 인프라가 서비스를 역참조하던 순환을 제거하고, 페이징을 `PageQuery`·`PageResult` 도메인 타입으로 바꿔 스프링 데이터를 인프라 안으로 가둠. 의존 방향을 강제하는 아키텍처 규칙 4종 추가 |
 | 2026-08-11 | 최초 작성. 명세 요구사항 추적표 도입, 지갑 충전(§5.6) 누락 발견하여 추가 |
 | 2026-08-11 | `HttpPaymentGatewayClient`와 WireMock 검증을 범위에서 제외(ADR 0009). 연동할 실제 게이트웨이가 없어 HTTP 타임아웃 설정이 향할 대상이 없다. 대신 확률 기반 장애 주입을 둔다 |
