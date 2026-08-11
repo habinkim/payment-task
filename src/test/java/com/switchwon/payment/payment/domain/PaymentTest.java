@@ -30,14 +30,14 @@ class PaymentTest {
 
         @Test
         @DisplayName("결제번호가 없으면 생성할 수 없다")
-        void rejectsNullPaymentNo() {
+        void rejectsNullMerchantPaymentNo() {
             assertThatThrownBy(() -> new Payment(null, 1L, BigDecimal.ONE, "USD"))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("결제번호가 64자를 넘으면 생성할 수 없다")
-        void rejectsTooLongPaymentNo() {
+        void rejectsTooLongMerchantPaymentNo() {
             String tooLong = "A".repeat(65);
 
             assertThatThrownBy(() -> new Payment(tooLong, 1L, BigDecimal.ONE, "USD"))
@@ -46,7 +46,7 @@ class PaymentTest {
 
         @Test
         @DisplayName("결제번호에 허용되지 않은 문자가 있으면 생성할 수 없다")
-        void rejectsIllegalCharacterInPaymentNo() {
+        void rejectsIllegalCharacterInMerchantPaymentNo() {
             assertThatThrownBy(() -> new Payment("PAY 001", 1L, BigDecimal.ONE, "USD"))
                     .isInstanceOf(IllegalArgumentException.class);
         }

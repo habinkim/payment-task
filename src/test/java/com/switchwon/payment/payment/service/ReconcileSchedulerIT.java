@@ -45,9 +45,9 @@ class ReconcileSchedulerIT {
     @Autowired
     private List<ScheduledTaskHolder> taskHolders;
 
-    private void pay(String paymentNo) throws Exception {
+    private void pay(String merchantPaymentNo) throws Exception {
         String body = objectMapper.writeValueAsString(
-                new PaymentRequest(paymentNo, RICH_WALLET, new BigDecimal("1.0000"), "USD"));
+                new PaymentRequest(merchantPaymentNo, RICH_WALLET, new BigDecimal("1.0000"), "USD"));
         mockMvc.perform(post("/api/v1/payments").contentType(MediaType.APPLICATION_JSON).content(body));
     }
 
@@ -58,14 +58,14 @@ class ReconcileSchedulerIT {
     @Test
     @DisplayName("결과 미상 건을 집어 확정한다")
     void reconcilesUnknownPayments() throws Exception {
-        String paymentNo = "TIMEOUT-SCH-" + System.nanoTime();
-        pay(paymentNo);
-        assertThat(ledgerStore.findByPaymentNo(paymentNo).orElseThrow().status())
+        String merchantPaymentNo = "TIMEOUT-SCH-" + System.nanoTime();
+        pay(merchantPaymentNo);
+        assertThat(ledgerStore.findByMerchantPaymentNo(merchantPaymentNo).orElseThrow().status())
                 .isEqualTo(PaymentStatus.UNKNOWN);
 
         scheduler.reconcilePending();
 
-        assertThat(ledgerStore.findByPaymentNo(paymentNo).orElseThrow().status())
+        assertThat(ledgerStore.findByMerchantPaymentNo(merchantPaymentNo).orElseThrow().status())
                 .isEqualTo(PaymentStatus.COMPLETED);
     }
 

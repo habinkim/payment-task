@@ -28,8 +28,8 @@ public class PaymentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "payment_no", nullable = false, updatable = false, length = 64)
-    private String paymentNo;
+    @Column(name = "merchant_payment_no", nullable = false, updatable = false, length = 64)
+    private String merchantPaymentNo;
 
     @Column(name = "wallet_id", nullable = false, updatable = false)
     private Long walletId;
@@ -69,7 +69,7 @@ public class PaymentEntity {
     private Instant updatedAt;
 
     private PaymentEntity(Payment payment, Instant now) {
-        this.paymentNo = payment.paymentNo();
+        this.merchantPaymentNo = payment.merchantPaymentNo();
         this.walletId = payment.walletId();
         this.amount = payment.amount();
         this.currency = payment.currency();
@@ -94,7 +94,7 @@ public class PaymentEntity {
 
     public Payment toDomain() {
         return Payment.restore(
-                paymentNo, walletId, amount, currency,
+                merchantPaymentNo, walletId, amount, currency,
                 status, failureReason, retriable,
                 externalTransactionId, externalResponseCode,
                 requestedAt, respondedAt, createdAt);

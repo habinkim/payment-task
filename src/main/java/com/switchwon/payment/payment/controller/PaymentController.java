@@ -89,9 +89,9 @@ public class PaymentController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404", description = "존재하지 않는 결제번호")
     })
-    @GetMapping("/api/v1/payments/{paymentNo}")
-    public ApiResponse<PaymentResponse> get(@PathVariable String paymentNo) {
-        return ApiResponse.success(PaymentResponse.from(paymentQueryService.getByPaymentNo(paymentNo)));
+    @GetMapping("/api/v1/payments/{merchantPaymentNo}")
+    public ApiResponse<PaymentResponse> get(@PathVariable String merchantPaymentNo) {
+        return ApiResponse.success(PaymentResponse.from(paymentQueryService.getByPaymentNo(merchantPaymentNo)));
     }
 
     @Operation(

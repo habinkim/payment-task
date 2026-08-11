@@ -2,9 +2,9 @@ package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.error.ApiException;
-import com.switchwon.payment.gateway.GatewayApproval;
-import com.switchwon.payment.gateway.GatewayApprovalRequest;
-import com.switchwon.payment.gateway.PaymentGatewayClient;
+import com.switchwon.payment.external.ExternalApproval;
+import com.switchwon.payment.external.ExternalApprovalRequest;
+import com.switchwon.payment.external.ExternalPaymentClient;
 import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentStatus;
@@ -43,7 +43,7 @@ class PaymentServiceTest {
     private PaymentTransactionService transaction;
 
     @Mock
-    private PaymentGatewayClient gateway;
+    private ExternalPaymentClient gateway;
 
     @Spy
     private PaymentMetrics metrics = new PaymentMetrics(new SimpleMeterRegistry());
@@ -55,12 +55,12 @@ class PaymentServiceTest {
         service = new PaymentService(transaction, gateway, metrics, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
-    private PaymentCommand command(String paymentNo, String amount) {
-        return new PaymentCommand(paymentNo, WALLET_ID, new BigDecimal(amount), "USD");
+    private PaymentCommand command(String merchantPaymentNo, String amount) {
+        return new PaymentCommand(merchantPaymentNo, WALLET_ID, new BigDecimal(amount), "USD");
     }
 
-    private Payment pending(String paymentNo, String amount) {
-        return new Payment(paymentNo, WALLET_ID, new BigDecimal(amount), "USD");
+    private Payment pending(String merchantPaymentNo, String amount) {
+        return new Payment(merchantPaymentNo, WALLET_ID, new BigDecimal(amount), "USD");
     }
 
     private void givenWallet(String balance) {
@@ -104,13 +104,13 @@ class PaymentServiceTest {
         given(transaction.findExisting("PAY-003")).willReturn(java.util.Optional.empty());
         givenWallet("1000");
         given(transaction.openPending(anyString(), anyLong(), any(), anyString())).willReturn(payment);
-        GatewayApproval approval = GatewayApproval.approved("TXN-1", "0000");
-        given(gateway.approve(any(GatewayApprovalRequest.class))).willReturn(approval);
+        ExternalApproval approval = ExternalApproval.approved("TXN-1", "0000");
+        given(gateway.approve(any(ExternalApprovalRequest.class))).willReturn(approval);
         given(transaction.settle(payment, approval)).willReturn(payment);
 
         service.pay(command("PAY-003", "100"));
 
-        verify(gateway).approve(any(GatewayApprovalRequest.class));
+        verify(gateway).approve(any(ExternalApprovalRequest.class));
         verify(transaction).settle(payment, approval);
     }
 
@@ -121,7 +121,7 @@ class PaymentServiceTest {
         given(transaction.findExisting("PAY-004")).willReturn(java.util.Optional.empty());
         givenWallet("1000");
         given(transaction.openPending(anyString(), anyLong(), any(), anyString())).willReturn(payment);
-        given(gateway.approve(any())).willReturn(GatewayApproval.approved("TXN-1", "0000"));
+        given(gateway.approve(any())).willReturn(ExternalApproval.approved("TXN-1", "0000"));
         given(transaction.settle(any(), any())).willReturn(payment);
 
         service.pay(command("PAY-004", "100"));
@@ -143,7 +143,7 @@ class PaymentServiceTest {
 
         verify(transaction).settle(org.mockito.ArgumentMatchers.eq(payment),
                 org.mockito.ArgumentMatchers.argThat(
-                        a -> a.result() == com.switchwon.payment.gateway.GatewayResult.IN_DOUBT));
+                        a -> a.result() == com.switchwon.payment.external.ExternalApprovalResult.IN_DOUBT));
     }
 
     @Test

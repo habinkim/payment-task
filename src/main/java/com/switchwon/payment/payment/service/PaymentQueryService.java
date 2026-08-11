@@ -20,8 +20,8 @@ public class PaymentQueryService {
     private final PaymentLedgerStore ledgerStore;
 
     @Transactional(readOnly = true)
-    public Payment getByPaymentNo(String paymentNo) {
-        return ledgerStore.findByPaymentNo(paymentNo)
+    public Payment getByPaymentNo(String merchantPaymentNo) {
+        return ledgerStore.findByMerchantPaymentNo(merchantPaymentNo)
                 .orElseThrow(() -> new ApiException(ResponseCode.PAYMENT_NOT_FOUND));
     }
 

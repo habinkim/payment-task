@@ -35,21 +35,21 @@ class PaymentQueryApiIT {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private void pay(String paymentNo, Long walletId, String amount) throws Exception {
+    private void pay(String merchantPaymentNo, Long walletId, String amount) throws Exception {
         String body = objectMapper.writeValueAsString(
-                new PaymentRequest(paymentNo, walletId, new BigDecimal(amount), "USD"));
+                new PaymentRequest(merchantPaymentNo, walletId, new BigDecimal(amount), "USD"));
         mockMvc.perform(post("/api/v1/payments").contentType(MediaType.APPLICATION_JSON).content(body));
     }
 
     @Test
     @DisplayName("결제번호로 조회하면 게이트웨이 대조에 필요한 값이 함께 나온다")
-    void findByPaymentNoReturnsReconcilableFields() throws Exception {
+    void findByMerchantPaymentNoReturnsReconcilableFields() throws Exception {
         pay("QRY-001", RICH_WALLET, "100");
 
         mockMvc.perform(get("/api/v1/payments/QRY-001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("OK"))
-                .andExpect(jsonPath("$.returnObject.paymentNo").value("QRY-001"))
+                .andExpect(jsonPath("$.returnObject.merchantPaymentNo").value("QRY-001"))
                 .andExpect(jsonPath("$.returnObject.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.returnObject.externalTransactionId").exists())
                 .andExpect(jsonPath("$.returnObject.externalResponseCode").exists())
@@ -136,7 +136,7 @@ class PaymentQueryApiIT {
 
         mockMvc.perform(get("/api/v1/payments").param("from", future.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                .andExpect(jsonPath("$.returnObject.content[*].merchantPaymentNo")
                         .value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("QRY-FROM-001"))));
     }
 
@@ -148,7 +148,7 @@ class PaymentQueryApiIT {
 
         mockMvc.perform(get("/api/v1/payments").param("to", past.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                .andExpect(jsonPath("$.returnObject.content[*].merchantPaymentNo")
                         .value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("QRY-TO-001"))));
     }
 
@@ -163,7 +163,7 @@ class PaymentQueryApiIT {
                         .param("from", from.toString())
                         .param("to", to.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                .andExpect(jsonPath("$.returnObject.content[*].merchantPaymentNo")
                         .value(org.hamcrest.Matchers.hasItem("QRY-RANGE-001")));
     }
 
@@ -178,9 +178,9 @@ class PaymentQueryApiIT {
                         .param("status", "FAILED")
                         .param("from", from.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                .andExpect(jsonPath("$.returnObject.content[*].merchantPaymentNo")
                         .value(org.hamcrest.Matchers.hasItem("DECLINE-QRY-MIX-002")))
-                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                .andExpect(jsonPath("$.returnObject.content[*].merchantPaymentNo")
                         .value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("QRY-MIX-001"))));
     }
 

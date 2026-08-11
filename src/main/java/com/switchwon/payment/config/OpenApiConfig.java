@@ -14,7 +14,7 @@ public class OpenApiConfig {
 
             ## 시나리오를 직접 눌러보려면
 
-            게이트웨이는 모의 구현이며 `paymentNo` 접두어로 결과가 결정된다.
+            게이트웨이는 모의 구현이며 `merchantPaymentNo` 접두어로 결과가 결정된다.
             요청 스펙을 바꾸지 않고 시나리오를 지정할 수 있도록 한 규약이다.
 
             | 접두어 | 결과 | HTTP |

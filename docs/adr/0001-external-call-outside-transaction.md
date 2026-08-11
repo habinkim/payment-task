@@ -28,7 +28,7 @@
 
 TX1이 커밋된 뒤에 외부를 호출하므로, 호출 도중 서버가 죽어도 "이 결제를 시도했다"는 사실이 DB에 남는다. Write-Ahead Intent Log와 같은 구조다. 남은 `PENDING` 건은 나중에 조회로 확정할 수 있다([0004](0004-timeout-is-indoubt.md)).
 
-실제 연동 구현(`HttpPaymentGatewayClient`)에는 connect와 read 타임아웃을 모두 명시한다. 타임아웃이 없으면 커넥션을 트랜잭션 밖으로 뺀 의미가 절반으로 준다. 스레드는 여전히 무한정 묶이기 때문이다.
+실제 연동 구현(`HttpExternalPaymentClient`)에는 connect와 read 타임아웃을 모두 명시한다. 타임아웃이 없으면 커넥션을 트랜잭션 밖으로 뺀 의미가 절반으로 준다. 스레드는 여전히 무한정 묶이기 때문이다.
 
 기본 프로파일의 모의 구현은 프로세스 안에서 응답하므로 이 설정이 적용되지 않는다([0007](0007-mock-gateway-in-production.md)). 타임아웃 설정이 실제로 동작하는지는 WireMock을 상대로 하는 통합 테스트에서 검증한다.
 

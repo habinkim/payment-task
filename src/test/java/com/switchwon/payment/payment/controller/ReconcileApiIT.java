@@ -42,9 +42,9 @@ class ReconcileApiIT {
     @Autowired
     private WalletStore walletStore;
 
-    private void pay(String paymentNo) throws Exception {
+    private void pay(String merchantPaymentNo) throws Exception {
         String body = objectMapper.writeValueAsString(
-                new PaymentRequest(paymentNo, RICH_WALLET, new BigDecimal(AMOUNT), "USD"));
+                new PaymentRequest(merchantPaymentNo, RICH_WALLET, new BigDecimal(AMOUNT), "USD"));
         mockMvc.perform(post("/api/v1/payments").contentType(MediaType.APPLICATION_JSON).content(body));
     }
 
@@ -52,8 +52,8 @@ class ReconcileApiIT {
         return walletStore.findById(RICH_WALLET).orElseThrow().balance();
     }
 
-    private Payment ledgerOf(String paymentNo) {
-        return ledgerStore.findByPaymentNo(paymentNo).orElseThrow();
+    private Payment ledgerOf(String merchantPaymentNo) {
+        return ledgerStore.findByMerchantPaymentNo(merchantPaymentNo).orElseThrow();
     }
 
     @Test
@@ -123,11 +123,11 @@ class ReconcileApiIT {
     void confirmedPaymentLeavesUnknownList() throws Exception {
         pay("TIMEOUT-RC-005");
         assertThat(ledgerStore.findOldestUnknown(100))
-                .extracting(Payment::paymentNo).contains("TIMEOUT-RC-005");
+                .extracting(Payment::merchantPaymentNo).contains("TIMEOUT-RC-005");
 
         mockMvc.perform(post("/api/v1/admin/payments/TIMEOUT-RC-005/reconcile"));
 
         assertThat(ledgerStore.findOldestUnknown(100))
-                .extracting(Payment::paymentNo).doesNotContain("TIMEOUT-RC-005");
+                .extracting(Payment::merchantPaymentNo).doesNotContain("TIMEOUT-RC-005");
     }
 }

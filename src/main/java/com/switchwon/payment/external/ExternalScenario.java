@@ -1,8 +1,8 @@
-package com.switchwon.payment.gateway;
+package com.switchwon.payment.external;
 
 import java.util.Arrays;
 
-public enum GatewayScenario {
+public enum ExternalScenario {
 
     TIMEOUT("TIMEOUT-"),
     SERVER_ERROR("ERR500-"),
@@ -13,17 +13,17 @@ public enum GatewayScenario {
 
     private final String prefix;
 
-    GatewayScenario(String prefix) {
+    ExternalScenario(String prefix) {
         this.prefix = prefix;
     }
 
-    public static GatewayScenario from(String paymentNo) {
-        if (paymentNo == null) {
+    public static ExternalScenario from(String merchantPaymentNo) {
+        if (merchantPaymentNo == null) {
             return APPROVED;
         }
         return Arrays.stream(values())
                 .filter(scenario -> !scenario.prefix.isEmpty())
-                .filter(scenario -> paymentNo.startsWith(scenario.prefix))
+                .filter(scenario -> merchantPaymentNo.startsWith(scenario.prefix))
                 .findFirst()
                 .orElse(APPROVED);
     }

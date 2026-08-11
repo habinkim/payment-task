@@ -87,7 +87,7 @@
 |---|---|
 | 금액 | 문자열 또는 숫자로 받되 `BigDecimal`로 다룬다. 소수점 4자리까지 |
 | 통화 | ISO 4217 세 글자 대문자 (`USD`, `JPY`, `KRW`) |
-| `paymentNo` | 영숫자와 하이픈, 최대 64자 |
+| `merchantPaymentNo` | 영숫자와 하이픈, 최대 64자 |
 | 시각 | ISO-8601 UTC (`2026-08-11T00:00:00Z`) |
 
 ---
@@ -136,7 +136,7 @@ COMPLETED, FAILED → (전이 불가)
 
 `SelfValidating` 같은 패턴으로 도메인에서도 애노테이션을 평가할 수 있으나, 그러면 도메인이 `jakarta.validation`에 의존하게 되어 §8.4의 아키텍처 규칙과 충돌한다.
 
-- `paymentNo` 필수, 형식 검증
+- `merchantPaymentNo` 필수, 형식 검증
 - `walletId` 필수
 - `amount` 필수, `> 0`
 - `currency` 필수, 세 글자
@@ -168,7 +168,7 @@ Flyway가 소유한다. JPA는 `validate`만 한다.
 
 | 결정 | 이유 |
 |---|---|
-| `payment_no VARCHAR(64)` UNIQUE | 멱등 키. 인덱스 크기 제한 |
+| `merchant_payment_no VARCHAR(64)` UNIQUE | 멱등 키. 인덱스 크기 제한 |
 | `amount DECIMAL(19,4)` | 금액 정밀도. `DOUBLE` 금지 |
 | `currency VARCHAR(3)` | ISO 4217. `CHAR`는 짧은 값에 공백을 채워 비교가 어긋난다 |
 | `status VARCHAR(16)` | enum 문자열. 가독성 우선 |
@@ -190,12 +190,14 @@ Flyway가 소유한다. JPA는 `validate`만 한다.
 
 | 결정 | 이유 |
 |---|---|
-| `charge_no VARCHAR(64)` UNIQUE | 멱등 키. `payment_no`와 같은 원리이며 동시 요청의 직렬화 지점 |
+| `charge_no VARCHAR(64)` UNIQUE | 멱등 키. `merchant_payment_no`와 같은 원리이며 동시 요청의 직렬화 지점 |
 | **`status` 컬럼 없음** | 외부 승인이 없어 중간 상태가 존재하지 않는다. 성공하면 행이 있고 실패하면 롤백된다 |
 | `CHECK (amount > 0)` | 0원·음수 충전 차단. 도메인 검증과 이중 방어 |
 | `idx_wallet_charge_wallet_id` | 지갑별 이력 조회 대비 |
 
 `payment`와 달리 갱신 컬럼(`updated_at`)이 없다. 충전 이력은 한 번 기록되면 바뀌지 않는다.
+
+결제는 `merchant_payment_no`인데 충전은 `charge_no`로 비대칭이다. 결제는 3rd party(가맹점)가 호출한다고 명세에 명시돼 있지만 **충전의 호출 주체는 명세에 없다.** 근거 없는 이름을 스키마에 박지 않는다([ADR 0011](adr/0011-merchant-payment-no.md)). 호출 주체가 확정되면 맞춘다.
 
 ---
 
@@ -211,7 +213,7 @@ POST /api/v1/payments
 
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---|---|
-| `paymentNo` | string | 예 | 3rd party가 생성. 멱등 키 |
+| `merchantPaymentNo` | string | 예 | 3rd party가 생성. 멱등 키 |
 | `walletId` | number | 예 | 대상 지갑 |
 | `amount` | number | 예 | `> 0` |
 | `currency` | string | 예 | 지갑 통화와 일치해야 한다 |
@@ -232,7 +234,7 @@ POST /api/v1/payments
   "code": "OK",
   "message": "정상적으로 처리되었습니다.",
   "returnObject": {
-    "paymentNo": "PAY-20260811-001",
+    "merchantPaymentNo": "PAY-20260811-001",
     "status": "COMPLETED",
     "amount": 100.0000,
     "currency": "USD",
@@ -252,23 +254,23 @@ POST /api/v1/payments
 | 게이트웨이 거절 | `PAYMENT_DECLINED` | 422 | `FAILED` |
 | 외부 또는 내부 장애 | `SYSTEM_ERROR` | 500 | `FAILED` |
 | 타임아웃 | `PAYMENT_IN_DOUBT` | 202 | `UNKNOWN` |
-| 동일 `paymentNo` 재요청 | 최초 결과 그대로 | 최초와 동일 | 최초와 동일 |
+| 동일 `merchantPaymentNo` 재요청 | 최초 결과 그대로 | 최초와 동일 | 최초와 동일 |
 
 멱등 재요청은 새로 처리하지 않고 저장된 결과를 반환한다. 최초 요청이 아직 처리 중이면 `DUPLICATE_PAYMENT_NO`(409)를 준다.
 
 ### 5.2 결제 단건 조회 ☑
 
 ```
-GET /api/v1/payments/{paymentNo}
+GET /api/v1/payments/{merchantPaymentNo}
 ```
 
-서버 PK가 아니라 `paymentNo`로 조회한다. 타임아웃으로 응답을 받지 못한 클라이언트도 호출할 수 있어야 하기 때문이다.
+서버 PK가 아니라 `merchantPaymentNo`로 조회한다. 타임아웃으로 응답을 받지 못한 클라이언트도 호출할 수 있어야 하기 때문이다.
 
 **응답 `returnObject`**
 
 | 필드 | 설명 |
 |---|---|
-| `paymentNo` | |
+| `merchantPaymentNo` | |
 | `walletId` | |
 | `amount`, `currency` | |
 | `status` | |
@@ -321,7 +323,7 @@ GET /api/v1/payments?status=&walletId=&from=&to=&page=0&size=20
 ### 5.5 정합성 확인 ☑
 
 ```
-POST /api/v1/admin/payments/{paymentNo}/reconcile
+POST /api/v1/admin/payments/{merchantPaymentNo}/reconcile
 ```
 
 `UNKNOWN` 건을 게이트웨이에 재조회해 상태를 확정한다. 운영자가 특정 건을 지목해 실행한다.
@@ -380,7 +382,7 @@ UPDATE wallet
 
 ### 6.3 멱등 처리
 
-`paymentNo`에 UNIQUE 제약을 걸고, 위반을 잡아 기존 건을 조회해 반환한다. 단순히 409를 내면 클라이언트가 결과를 알 수 없다.
+`merchantPaymentNo`에 UNIQUE 제약을 걸고, 위반을 잡아 기존 건을 조회해 반환한다. 단순히 409를 내면 클라이언트가 결과를 알 수 없다.
 
 ### 6.4 실패 분류
 
@@ -446,7 +448,7 @@ UPDATE wallet
 ### 8.3 동시성 테스트 ☑
 
 - 잔액 100인 지갑에 80짜리 결제 2건 동시 요청 → 1건만 성공, 잔액 음수 아님
-- 동일 `paymentNo` 2건 동시 요청 → 1건만 처리, 나머지는 최초 결과 반환
+- 동일 `merchantPaymentNo` 2건 동시 요청 → 1건만 처리, 나머지는 최초 결과 반환
 
 ### 8.4 아키텍처 테스트 ☑
 
@@ -469,14 +471,14 @@ UPDATE wallet
 
 | 구현 | 활성 조건 | 역할 |
 |---|---|---|
-| `MockPaymentGatewayClient` | `payment.gateway.mode=mock` (기본) | 시나리오 판정. 앱의 정상 동작 경로 |
-| `HttpPaymentGatewayClient` | — | **만들지 않는다.** 연동할 실제 게이트웨이가 없다(ADR 0009) |
+| `MockExternalPaymentClient` | `payment.gateway.mode=mock` (기본) | 시나리오 판정. 앱의 정상 동작 경로 |
+| `HttpExternalPaymentClient` | — | **만들지 않는다.** 연동할 실제 게이트웨이가 없다(ADR 0009) |
 
 전환은 스프링 프로파일이 아니라 설정 키로 한다. 프로파일은 실행 환경 전체를 가르므로 게이트웨이 구현이라는 좁은 관심사를 묶기에 적합하지 않다(ADR 0007).
 
 ### 9.2 시나리오 트리거
 
-`paymentNo` 접두어로 판정한다. 해석은 Mock 안에만 둔다.
+`merchantPaymentNo` 접두어로 판정한다. 해석은 Mock 안에만 둔다.
 
 | 접두어 | 결과 |
 |---|---|
@@ -533,15 +535,16 @@ HTTP 타임아웃 설정(`connect-timeout`, `read-timeout`)은 향할 대상이 
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-08-12 | 역할을 드러내는 이름으로 정정(ADR 0011). 우리가 PG이므로 외부 연동 타입을 `Gateway*` → `External*`, 패키지·설정 키를 `gateway` → `external`로 옮기고, 3rd party가 발급하는 결제번호를 `paymentNo` → `merchantPaymentNo`로 변경. API 요청·응답 키와 DB 컬럼 포함 |
 | 2026-08-12 | S6 지갑 충전 완료. `POST /api/v1/wallets/{walletId}/charge` 추가하고 이력을 `wallet_charge`(V3)에 별도 저장. `chargeNo` UNIQUE로 멱등을 보장하며 중복 요청은 409가 아니라 200과 최초 이력을 반환 |
 | 2026-08-11 | 저장소를 도메인 인터페이스와 인프라 구현으로 분리(ADR 0010). 인프라가 서비스를 역참조하던 순환을 제거하고, 페이징을 `PageQuery`·`PageResult` 도메인 타입으로 바꿔 스프링 데이터를 인프라 안으로 가둠. 의존 방향을 강제하는 아키텍처 규칙 4종 추가 |
 | 2026-08-11 | 최초 작성. 명세 요구사항 추적표 도입, 지갑 충전(§5.6) 누락 발견하여 추가 |
-| 2026-08-11 | `HttpPaymentGatewayClient`와 WireMock 검증을 범위에서 제외(ADR 0009). 연동할 실제 게이트웨이가 없어 HTTP 타임아웃 설정이 향할 대상이 없다. 대신 확률 기반 장애 주입을 둔다 |
+| 2026-08-11 | `HttpExternalPaymentClient`와 WireMock 검증을 범위에서 제외(ADR 0009). 연동할 실제 게이트웨이가 없어 HTTP 타임아웃 설정이 향할 대상이 없다. 대신 확률 기반 장애 주입을 둔다 |
 | 2026-08-11 | S8 정합성 확인 완료. 게이트웨이 재조회로 결과 미상 건을 확정하고, 스케줄러가 주기적으로 처리한다. 스케줄러는 기본 비활성이며 `prod`에서만 켠다 |
 | 2026-08-11 | S7 조회 API 완료. 단건·지갑·목록 조회를 추가하고 `Payment` 도메인에 `createdAt`을 더해 정렬 기준을 응답에 노출. 조회는 결제 상태와 무관하게 200을 반환한다 |
 | 2026-08-11 | 로깅을 프로파일별로 분리. `<root>`가 `springProfile` 안에만 있어 프로파일 없이 실행하면 로그가 전혀 출력되지 않던 문제를 수정 |
 | 2026-08-11 | API 문서 UI를 Swagger UI에서 Scalar로 교체. OpenAPI 애노테이션으로 시나리오 접두어와 시드 지갑을 문서에 담아 평가자가 문서에서 바로 눌러볼 수 있게 함. 텔레메트리는 끔 |
-| 2026-08-11 | S5 결제 처리 서비스 완료. 트랜잭션 경계를 오케스트레이터와 전용 서비스로 분리(ADR 0001). `GatewayResult`를 재시도 가능 여부로 세분화. 동시성 테스트에서 `WalletStore` 쓰기 메서드에 트랜잭션이 없어 트랜잭션 밖 호출이 실패하는 결함을 발견해 수정 |
+| 2026-08-11 | S5 결제 처리 서비스 완료. 트랜잭션 경계를 오케스트레이터와 전용 서비스로 분리(ADR 0001). `ExternalApprovalResult`를 재시도 가능 여부로 세분화. 동시성 테스트에서 `WalletStore` 쓰기 메서드에 트랜잭션이 없어 트랜잭션 밖 호출이 실패하는 결함을 발견해 수정 |
 | 2026-08-11 | S4 모의 게이트웨이 완료. 전환 수단을 스프링 프로파일에서 `payment.gateway.mode` 설정 키로 변경. 로깅 설정을 추가하고 `-PshowSql` 로 테스트에서 SQL을 볼 수 있게 함 |
 | 2026-08-11 | S3 영속 계층 완료. 도메인과 JPA 엔티티를 분리하고(ADR 0008) 잔액 증감을 조건부 UPDATE로 처리. `currency`를 `CHAR`에서 `VARCHAR`로 교정 — `CHAR`는 짧은 값에 공백을 채워 비교가 어긋난다 |
 | 2026-08-11 | S2 도메인 모델 완료. 도메인 클래스를 `payment/domain`, `wallet/domain` 하위 패키지로 배치. 검증은 계층별로 분리하여 도메인은 생성자 불변식, 요청 DTO는 Bean Validation을 쓴다 |

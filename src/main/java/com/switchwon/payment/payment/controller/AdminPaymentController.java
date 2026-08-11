@@ -36,8 +36,8 @@ public class AdminPaymentController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404", description = "존재하지 않는 결제번호")
     })
-    @PostMapping("/api/v1/admin/payments/{paymentNo}/reconcile")
-    public ApiResponse<PaymentResponse> reconcile(@PathVariable String paymentNo) {
-        return ApiResponse.success(PaymentResponse.from(reconcileService.reconcile(paymentNo)));
+    @PostMapping("/api/v1/admin/payments/{merchantPaymentNo}/reconcile")
+    public ApiResponse<PaymentResponse> reconcile(@PathVariable String merchantPaymentNo) {
+        return ApiResponse.success(PaymentResponse.from(reconcileService.reconcile(merchantPaymentNo)));
     }
 }

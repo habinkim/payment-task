@@ -30,8 +30,8 @@ class ReconcileSchedulerTest {
         return new ReconcileScheduler(reconcileService, new ReconcileProperties(true, null, batchSize));
     }
 
-    private Payment payment(String paymentNo) {
-        return new Payment(paymentNo, 1L, new BigDecimal("100"), "USD");
+    private Payment payment(String merchantPaymentNo) {
+        return new Payment(merchantPaymentNo, 1L, new BigDecimal("100"), "USD");
     }
 
     @Test

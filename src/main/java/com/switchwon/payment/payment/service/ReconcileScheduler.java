@@ -33,9 +33,9 @@ public class ReconcileScheduler {
 
     private void reconcileQuietly(Payment payment) {
         try {
-            reconcileService.reconcile(payment.paymentNo());
+            reconcileService.reconcile(payment.merchantPaymentNo());
         } catch (RuntimeException e) {
-            log.warn("정합성 확인에 실패했습니다. paymentNo={}", payment.paymentNo(), e);
+            log.warn("정합성 확인에 실패했습니다. merchantPaymentNo={}", payment.merchantPaymentNo(), e);
         }
     }
 }

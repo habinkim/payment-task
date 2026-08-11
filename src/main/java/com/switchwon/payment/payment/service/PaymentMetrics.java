@@ -31,8 +31,8 @@ public class PaymentMetrics {
 
     public void recordOrphan(Payment payment) {
         registry.counter(ORPHAN).increment();
-        log.warn("외부 승인 후 잔액 차감에 실패했습니다. paymentNo={}, walletId={}, externalTransactionId={}",
-                payment.paymentNo(), payment.walletId(), payment.externalTransactionId());
+        log.warn("외부 승인 후 잔액 차감에 실패했습니다. merchantPaymentNo={}, walletId={}, externalTransactionId={}",
+                payment.merchantPaymentNo(), payment.walletId(), payment.externalTransactionId());
     }
 
     public void recordReconcile(String result) {

@@ -55,7 +55,7 @@ class OpenApiDocumentIT {
     void queryEndpointsAreDocumented() throws Exception {
         mockMvc.perform(get(DOC))
                 .andExpect(jsonPath("$.paths['/api/v1/payments'].get.summary").value("결제 목록 조회"))
-                .andExpect(jsonPath("$.paths['/api/v1/payments/{paymentNo}'].get.summary").value("결제 단건 조회"))
+                .andExpect(jsonPath("$.paths['/api/v1/payments/{merchantPaymentNo}'].get.summary").value("결제 단건 조회"))
                 .andExpect(jsonPath("$.paths['/api/v1/wallets/{walletId}'].get.summary").value("지갑 조회"));
     }
 
@@ -63,11 +63,11 @@ class OpenApiDocumentIT {
     @DisplayName("정합성 확인 엔드포인트가 문서에 포함된다")
     void reconcileEndpointIsDocumented() throws Exception {
         mockMvc.perform(get(DOC))
-                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{paymentNo}/reconcile'].post.summary")
+                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{merchantPaymentNo}/reconcile'].post.summary")
                         .value("정합성 확인"))
-                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{paymentNo}/reconcile'].post.responses.200")
+                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{merchantPaymentNo}/reconcile'].post.responses.200")
                         .exists())
-                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{paymentNo}/reconcile'].post.responses.404")
+                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{merchantPaymentNo}/reconcile'].post.responses.404")
                         .exists());
     }
 
@@ -95,7 +95,7 @@ class OpenApiDocumentIT {
     @DisplayName("요청 필드에 예제 값이 담긴다")
     void requestFieldsHaveExamples() throws Exception {
         mockMvc.perform(get(DOC))
-                .andExpect(jsonPath(PAYMENT_SCHEMA + ".paymentNo.example").value("PAY-20260811-001"))
+                .andExpect(jsonPath(PAYMENT_SCHEMA + ".merchantPaymentNo.example").value("PAY-20260811-001"))
                 .andExpect(jsonPath(PAYMENT_SCHEMA + ".walletId.example").value(1))
                 .andExpect(jsonPath(PAYMENT_SCHEMA + ".currency.example").value("USD"));
     }

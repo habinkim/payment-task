@@ -5,10 +5,10 @@ import java.time.Instant;
 import java.util.regex.Pattern;
 
 public class Payment {
-    private static final Pattern PAYMENT_NO = Pattern.compile("^[A-Za-z0-9-]{1,64}$");
+    private static final Pattern MERCHANT_PAYMENT_NO = Pattern.compile("^[A-Za-z0-9-]{1,64}$");
     private static final int CURRENCY_LENGTH = 3;
 
-    private final String paymentNo;
+    private final String merchantPaymentNo;
     private final Long walletId;
     private final BigDecimal amount;
     private final String currency;
@@ -22,9 +22,9 @@ public class Payment {
     private Instant respondedAt;
     private Instant createdAt;
 
-    public Payment(String paymentNo, Long walletId, BigDecimal amount, String currency) {
-        if (paymentNo == null || !PAYMENT_NO.matcher(paymentNo).matches()) {
-            throw new IllegalArgumentException("paymentNo는 영숫자와 하이픈 64자 이내여야 합니다: " + paymentNo);
+    public Payment(String merchantPaymentNo, Long walletId, BigDecimal amount, String currency) {
+        if (merchantPaymentNo == null || !MERCHANT_PAYMENT_NO.matcher(merchantPaymentNo).matches()) {
+            throw new IllegalArgumentException("merchantPaymentNo는 영숫자와 하이픈 64자 이내여야 합니다: " + merchantPaymentNo);
         }
         if (walletId == null) {
             throw new IllegalArgumentException("walletId는 필수입니다");
@@ -36,18 +36,18 @@ public class Payment {
             throw new IllegalArgumentException("currency는 ISO 4217 세 글자여야 합니다: " + currency);
         }
 
-        this.paymentNo = paymentNo;
+        this.merchantPaymentNo = merchantPaymentNo;
         this.walletId = walletId;
         this.amount = amount;
         this.currency = currency;
         this.status = PaymentStatus.PENDING;
     }
 
-    public static Payment restore(String paymentNo, Long walletId, BigDecimal amount, String currency,
+    public static Payment restore(String merchantPaymentNo, Long walletId, BigDecimal amount, String currency,
                                   PaymentStatus status, FailureReason failureReason, Boolean retriable,
                                   String externalTransactionId, String externalResponseCode,
                                   Instant requestedAt, Instant respondedAt, Instant createdAt) {
-        Payment payment = new Payment(paymentNo, walletId, amount, currency);
+        Payment payment = new Payment(merchantPaymentNo, walletId, amount, currency);
         payment.status = status;
         payment.failureReason = failureReason;
         payment.retriable = retriable;
@@ -66,7 +66,7 @@ public class Payment {
     public void recordExternalApproval(String externalTransactionId) {
         if (status != PaymentStatus.FAILED) {
             throw new IllegalStateException(
-                    "실패한 결제에만 외부 승인 사실을 남길 수 있습니다: " + status + " (paymentNo=" + paymentNo + ")");
+                    "실패한 결제에만 외부 승인 사실을 남길 수 있습니다: " + status + " (merchantPaymentNo=" + merchantPaymentNo + ")");
         }
         this.externalTransactionId = externalTransactionId;
     }
@@ -100,10 +100,10 @@ public class Payment {
     private void transitionTo(PaymentStatus next) {
         if (status.isTerminal()) {
             throw new IllegalStateException(
-                    "종료 상태에서는 전이할 수 없습니다: " + status + " -> " + next + " (paymentNo=" + paymentNo + ")");
+                    "종료 상태에서는 전이할 수 없습니다: " + status + " -> " + next + " (merchantPaymentNo=" + merchantPaymentNo + ")");
         }
         if (next == PaymentStatus.UNKNOWN && status == PaymentStatus.UNKNOWN) {
-            throw new IllegalStateException("이미 결과 미상입니다: paymentNo=" + paymentNo);
+            throw new IllegalStateException("이미 결과 미상입니다: merchantPaymentNo=" + merchantPaymentNo);
         }
         this.status = next;
     }
@@ -112,8 +112,8 @@ public class Payment {
         return status.isTerminal();
     }
 
-    public String paymentNo() {
-        return paymentNo;
+    public String merchantPaymentNo() {
+        return merchantPaymentNo;
     }
 
     public Long walletId() {

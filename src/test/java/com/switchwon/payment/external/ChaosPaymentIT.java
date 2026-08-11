@@ -1,4 +1,4 @@
-package com.switchwon.payment.gateway;
+package com.switchwon.payment.external;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.switchwon.payment.payment.controller.dto.PaymentRequest;
@@ -42,25 +42,25 @@ class ChaosPaymentIT {
         @Autowired
         protected WalletStore walletStore;
 
-        protected String body(String paymentNo) throws Exception {
+        protected String body(String merchantPaymentNo) throws Exception {
             return objectMapper.writeValueAsString(
-                    new PaymentRequest(paymentNo, RICH_WALLET, new BigDecimal(AMOUNT), "USD"));
+                    new PaymentRequest(merchantPaymentNo, RICH_WALLET, new BigDecimal(AMOUNT), "USD"));
         }
 
         protected BigDecimal balance() {
             return walletStore.findById(RICH_WALLET).orElseThrow().balance();
         }
 
-        protected Payment ledgerOf(String paymentNo) {
-            return ledgerStore.findByPaymentNo(paymentNo).orElseThrow();
+        protected Payment ledgerOf(String merchantPaymentNo) {
+            return ledgerStore.findByMerchantPaymentNo(merchantPaymentNo).orElseThrow();
         }
     }
 
     @Nested
     @SpringBootTest(properties = {
-            "payment.gateway.chaos.enabled=true",
-            "payment.gateway.chaos.timeout-rate=1.0",
-            "payment.gateway.chaos.failure-rate=0.0",
+            "payment.external.chaos.enabled=true",
+            "payment.external.chaos.timeout-rate=1.0",
+            "payment.external.chaos.failure-rate=0.0",
             "payment.reconcile.enabled=false"
     })
     @AutoConfigureMockMvc
@@ -121,9 +121,9 @@ class ChaosPaymentIT {
 
     @Nested
     @SpringBootTest(properties = {
-            "payment.gateway.chaos.enabled=true",
-            "payment.gateway.chaos.timeout-rate=0.0",
-            "payment.gateway.chaos.failure-rate=1.0",
+            "payment.external.chaos.enabled=true",
+            "payment.external.chaos.timeout-rate=0.0",
+            "payment.external.chaos.failure-rate=1.0",
             "payment.reconcile.enabled=false"
     })
     @AutoConfigureMockMvc
@@ -155,7 +155,7 @@ class ChaosPaymentIT {
             mockMvc.perform(post("/api/v1/payments")
                     .contentType(MediaType.APPLICATION_JSON).content(body("CHAOS-F-002")));
 
-            assertThat(ledgerStore.findByPaymentNo("CHAOS-F-002")).isPresent();
+            assertThat(ledgerStore.findByMerchantPaymentNo("CHAOS-F-002")).isPresent();
         }
 
         @Test

@@ -2,9 +2,9 @@ package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.error.ApiException;
-import com.switchwon.payment.gateway.GatewayApproval;
-import com.switchwon.payment.gateway.GatewayInquiry;
-import com.switchwon.payment.gateway.InquiryResult;
+import com.switchwon.payment.external.ExternalApproval;
+import com.switchwon.payment.external.ExternalInquiry;
+import com.switchwon.payment.external.ExternalInquiryResult;
 import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentLedgerStore;
@@ -31,8 +31,8 @@ public class PaymentTransactionService {
     private final Clock clock;
 
     @Transactional(readOnly = true)
-    public Optional<Payment> findExisting(String paymentNo) {
-        return ledgerStore.findByPaymentNo(paymentNo);
+    public Optional<Payment> findExisting(String merchantPaymentNo) {
+        return ledgerStore.findByMerchantPaymentNo(merchantPaymentNo);
     }
 
     @Transactional(readOnly = true)
@@ -42,9 +42,9 @@ public class PaymentTransactionService {
     }
 
     @Transactional
-    public Payment openPending(String paymentNo, Long walletId, BigDecimal amount, String currency) {
+    public Payment openPending(String merchantPaymentNo, Long walletId, BigDecimal amount, String currency) {
         try {
-            return ledgerStore.append(new Payment(paymentNo, walletId, amount, currency));
+            return ledgerStore.append(new Payment(merchantPaymentNo, walletId, amount, currency));
         } catch (DataIntegrityViolationException e) {
             throw new ApiException(ResponseCode.DUPLICATE_PAYMENT_NO);
         }
@@ -59,7 +59,7 @@ public class PaymentTransactionService {
     }
 
     @Transactional
-    public Payment settle(Payment payment, GatewayApproval approval) {
+    public Payment settle(Payment payment, ExternalApproval approval) {
         Instant now = Instant.now(clock);
 
         switch (approval.result()) {
@@ -81,8 +81,8 @@ public class PaymentTransactionService {
     }
 
     @Transactional
-    public Payment confirm(Payment payment, GatewayInquiry inquiry) {
-        if (inquiry.result() == InquiryResult.STILL_UNKNOWN) {
+    public Payment confirm(Payment payment, ExternalInquiry inquiry) {
+        if (inquiry.result() == ExternalInquiryResult.STILL_UNKNOWN) {
             metrics.recordReconcile(inquiry.result().name());
             return payment;
         }
@@ -101,7 +101,7 @@ public class PaymentTransactionService {
         return payment;
     }
 
-    private void confirmApproved(Payment payment, GatewayInquiry inquiry, Instant now) {
+    private void confirmApproved(Payment payment, ExternalInquiry inquiry, Instant now) {
         if (walletStore.deductIfEnough(payment.walletId(), payment.amount())) {
             payment.complete(inquiry.externalTransactionId(), inquiry.externalResponseCode(), now);
             return;
@@ -112,7 +112,7 @@ public class PaymentTransactionService {
         metrics.recordOrphan(payment);
     }
 
-    private void settleApproved(Payment payment, GatewayApproval approval, Instant now) {
+    private void settleApproved(Payment payment, ExternalApproval approval, Instant now) {
         if (walletStore.deductIfEnough(payment.walletId(), payment.amount())) {
             payment.complete(approval.externalTransactionId(), approval.externalResponseCode(), now);
             return;
