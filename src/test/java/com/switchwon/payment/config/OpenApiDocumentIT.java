@@ -60,6 +60,18 @@ class OpenApiDocumentIT {
     }
 
     @Test
+    @DisplayName("정합성 확인 엔드포인트가 문서에 포함된다")
+    void reconcileEndpointIsDocumented() throws Exception {
+        mockMvc.perform(get(DOC))
+                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{paymentNo}/reconcile'].post.summary")
+                        .value("정합성 확인"))
+                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{paymentNo}/reconcile'].post.responses.200")
+                        .exists())
+                .andExpect(jsonPath("$.paths['/api/v1/admin/payments/{paymentNo}/reconcile'].post.responses.404")
+                        .exists());
+    }
+
+    @Test
     @DisplayName("목록 조회 필터가 문서에 노출된다")
     void listFiltersAreDocumented() throws Exception {
         mockMvc.perform(get(DOC))
