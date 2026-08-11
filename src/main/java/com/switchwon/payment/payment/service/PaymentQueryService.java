@@ -1,13 +1,12 @@
 package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.common.ResponseCode;
+import com.switchwon.payment.common.page.PageQuery;
+import com.switchwon.payment.common.page.PageResult;
 import com.switchwon.payment.error.ApiException;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.infra.PaymentLedgerStore;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentQueryService {
 
     private static final int MAX_PAGE_SIZE = 100;
-    private static final String SORT_BY = "createdAt";
 
     private final PaymentLedgerStore ledgerStore;
 
@@ -27,8 +25,8 @@ public class PaymentQueryService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Payment> search(PaymentSearchCondition condition, int page, int size) {
-        return ledgerStore.search(condition, PageRequest.of(page, capped(size), Sort.by(Sort.Direction.DESC, SORT_BY)));
+    public PageResult<Payment> search(PaymentSearchCondition condition, int page, int size) {
+        return ledgerStore.search(condition, new PageQuery(page, capped(size)));
     }
 
     private int capped(int size) {

@@ -2,6 +2,7 @@ package com.switchwon.payment.payment.controller;
 
 import com.switchwon.payment.common.ApiResponse;
 import com.switchwon.payment.common.PageResponse;
+import com.switchwon.payment.common.page.PageResult;
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.payment.controller.dto.PaymentRequest;
 import com.switchwon.payment.payment.controller.dto.PaymentResponse;
@@ -17,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -119,7 +119,7 @@ public class PaymentController {
             @Parameter(description = "페이지 번호") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기. 최대 100") @RequestParam(defaultValue = "20") int size) {
 
-        Page<Payment> found = paymentQueryService.search(
+        PageResult<Payment> found = paymentQueryService.search(
                 new PaymentSearchCondition(status, walletId, from, to), page, size);
 
         return ApiResponse.success(PageResponse.of(found, PaymentResponse::from));
