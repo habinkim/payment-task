@@ -22,14 +22,14 @@
 
 ```
 src/main/.../gateway/
-├── PaymentGatewayClient          인터페이스
-├── MockPaymentGatewayClient      payment.gateway.mode=mock  기본 활성
-└── HttpPaymentGatewayClient      payment.gateway.mode=real  실제 연동
+├── ExternalPaymentClient          인터페이스
+├── MockExternalPaymentClient      payment.gateway.mode=mock  기본 활성
+└── HttpExternalPaymentClient      payment.gateway.mode=real  실제 연동
 ```
 
-`MockPaymentGatewayClient`가 기본이다. 별도 설정 없이 앱을 띄우면 이 구현이 동작한다. 평가자는 저장소를 클론해 `./gradlew bootRun` 한 줄로 결제 전 경로를 눌러볼 수 있다.
+`MockExternalPaymentClient`가 기본이다. 별도 설정 없이 앱을 띄우면 이 구현이 동작한다. 평가자는 저장소를 클론해 `./gradlew bootRun` 한 줄로 결제 전 경로를 눌러볼 수 있다.
 
-`HttpPaymentGatewayClient`는 실제 게이트웨이가 생겼을 때를 위한 구현이다. `payment.gateway.mode=real` 일 때만 활성화된다. 두 구현은 배타적이라 한쪽이 뜨면 다른 쪽은 생성되지 않는다.
+`HttpExternalPaymentClient`는 실제 게이트웨이가 생겼을 때를 위한 구현이다. `payment.gateway.mode=real` 일 때만 활성화된다. 두 구현은 배타적이라 한쪽이 뜨면 다른 쪽은 생성되지 않는다.
 
 전환 수단으로 스프링 프로파일이 아니라 설정 키를 쓴다. 프로파일은 애플리케이션 전역의 실행 환경을 가르는 장치인데, 게이트웨이 구현 선택은 그보다 좁은 관심사다. 프로파일에 묶으면 `real` 이 로깅과 DB 설정까지 함께 끌고 다녀 "게이트웨이만 실제 연동으로 바꾸고 나머지는 그대로"가 불가능해진다. 설정 키는 프로파일과 직교하므로 어떤 환경에서든 게이트웨이만 갈아끼울 수 있다.
 
@@ -37,17 +37,17 @@ src/main/.../gateway/
 
 ### 검증 책임의 분담 (Superseded by [0009](0009-chaos-injection-instead-of-http-client.md))
 
-> 이 절은 폐기됐다. 연동할 실제 게이트웨이가 없어 `HttpPaymentGatewayClient`와 WireMock 검증을 만들지 않기로 했다.
+> 이 절은 폐기됐다. 연동할 실제 게이트웨이가 없어 `HttpExternalPaymentClient`와 WireMock 검증을 만들지 않기로 했다.
 > 대신 모의 구현에 확률 기반 장애 주입을 둔다. 아래는 당시 판단의 기록이다.
 
 모의 구현과 WireMock은 검증하는 대상이 다르다. 둘 다 필요한 이유다.
 
 | 대상 | 검증 주체 | 무엇을 확인하나 |
 |---|---|---|
-| 서비스 로직, 상태 전이, 실패 분류 | `MockPaymentGatewayClient` | 승인 결과별로 원장이 올바른 상태로 가는가 |
-| 타임아웃 설정, 연결 실패, 상태 코드 처리 | WireMock + `HttpPaymentGatewayClient` | HTTP 계층 설정이 실제로 동작하는가 |
+| 서비스 로직, 상태 전이, 실패 분류 | `MockExternalPaymentClient` | 승인 결과별로 원장이 올바른 상태로 가는가 |
+| 타임아웃 설정, 연결 실패, 상태 코드 처리 | WireMock + `HttpExternalPaymentClient` | HTTP 계층 설정이 실제로 동작하는가 |
 
-모의 구현은 **결과를 만든다.** 타임아웃 시나리오라면 `GatewayApproval.inDoubt()`를 반환한다. 실제로 기다리지 않는다. 그래야 단위 테스트가 밀리초 단위로 끝난다.
+모의 구현은 **결과를 만든다.** 타임아웃 시나리오라면 `ExternalApproval.inDoubt()`를 반환한다. 실제로 기다리지 않는다. 그래야 단위 테스트가 밀리초 단위로 끝난다.
 
 WireMock은 **설정을 검증한다.** `withFixedDelay()`로 응답을 늦춰 read timeout이 실제로 걸리는지 본다. `withFault(CONNECTION_RESET_BY_PEER)`로 연결을 끊는다. 이런 조작은 인터페이스 구현체로 재현할 수 없다.
 
@@ -55,7 +55,7 @@ WireMock은 **설정을 검증한다.** `withFixedDelay()`로 응답을 늦춰 r
 
 ### 시나리오 트리거 규약
 
-모의 구현은 `paymentNo` 접두어로 시나리오를 판정한다.
+모의 구현은 `merchantPaymentNo` 접두어로 시나리오를 판정한다.
 
 ```
 TIMEOUT-20260810-001    결과 미상
@@ -66,9 +66,9 @@ SLOW-20260810-001       지연 응답
 (접두어 없음)            정상 승인
 ```
 
-`paymentNo`는 3rd party가 자유롭게 만드는 값이므로([0002](0002-payment-no-as-idempotency-key.md)) 요청 스펙을 바꾸지 않고 시나리오를 지정할 수 있다. 값이 원장에 남아 어떤 조건에서 만들어진 건인지 추적된다. 실제 결제 게이트웨이들이 테스트 환경에서 쓰는 방식이기도 하다.
+`merchantPaymentNo`는 3rd party가 자유롭게 만드는 값이므로([0002](0002-payment-no-as-idempotency-key.md)) 요청 스펙을 바꾸지 않고 시나리오를 지정할 수 있다. 값이 원장에 남아 어떤 조건에서 만들어진 건인지 추적된다. 실제 결제 게이트웨이들이 테스트 환경에서 쓰는 방식이기도 하다.
 
-**접두어 해석은 모의 구현 안에만 둔다.** `HttpPaymentGatewayClient`는 접두어의 존재를 알지 못하며, 받은 `paymentNo`를 그대로 외부에 전달한다. 시뮬레이션 규약이 실제 연동 경로로 새어 들어가지 않게 하는 경계다.
+**접두어 해석은 모의 구현 안에만 둔다.** `HttpExternalPaymentClient`는 접두어의 존재를 알지 못하며, 받은 `merchantPaymentNo`를 그대로 외부에 전달한다. 시뮬레이션 규약이 실제 연동 경로로 새어 들어가지 않게 하는 경계다.
 
 ## 결과
 
@@ -84,7 +84,7 @@ SLOW-20260810-001       지연 응답
 
 그리고 **기본 설정에서는 HTTP 계층 설정이 한 번도 실행되지 않는다.** connect와 read 타임아웃, 커넥션 풀 설정은 `mode=real`에서만 경로에 놓인다. 이 설정의 정합성은 앱을 띄워보는 것으로 확인되지 않고 통합 테스트로만 담보된다. 설정을 바꿔놓고 앱이 잘 뜬다고 안심하면 안 되는 구조다.
 
-**`HttpPaymentGatewayClient`는 기본 설정에서 호출되지 않는다.** 죽은 코드로 보일 수 있으나 통합 테스트가 `mode=real`로 이것을 실행 대상으로 삼는다. WireMock을 상대로 타임아웃과 연결 실패를 검증하는 경로가 곧 이 클래스다.
+**`HttpExternalPaymentClient`는 기본 설정에서 호출되지 않는다.** 죽은 코드로 보일 수 있으나 통합 테스트가 `mode=real`로 이것을 실행 대상으로 삼는다. WireMock을 상대로 타임아웃과 연결 실패를 검증하는 경로가 곧 이 클래스다.
 
 ## 검토한 대안
 

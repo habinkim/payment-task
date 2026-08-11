@@ -1,6 +1,6 @@
 # 0002. 결제번호는 3rd party가 생성하고 멱등 키를 겸한다
 
-상태: Accepted
+상태: **Superseded by [0011](0011-merchant-payment-no.md)** — 결정의 골자(3rd party가 발급하고 멱등 키를 겸한다)는 유효하나, 필드명이 `paymentNo`에서 `merchantPaymentNo`로 바뀌었다.
 
 ## 맥락
 
