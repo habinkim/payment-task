@@ -1,4 +1,4 @@
-package com.switchwon.payment.gateway;
+package com.switchwon.payment.external;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.switchwon.payment.payment.controller.dto.PaymentRequest;
@@ -58,9 +58,9 @@ class ChaosPaymentIT {
 
     @Nested
     @SpringBootTest(properties = {
-            "payment.gateway.chaos.enabled=true",
-            "payment.gateway.chaos.timeout-rate=1.0",
-            "payment.gateway.chaos.failure-rate=0.0",
+            "payment.external.chaos.enabled=true",
+            "payment.external.chaos.timeout-rate=1.0",
+            "payment.external.chaos.failure-rate=0.0",
             "payment.reconcile.enabled=false"
     })
     @AutoConfigureMockMvc
@@ -121,9 +121,9 @@ class ChaosPaymentIT {
 
     @Nested
     @SpringBootTest(properties = {
-            "payment.gateway.chaos.enabled=true",
-            "payment.gateway.chaos.timeout-rate=0.0",
-            "payment.gateway.chaos.failure-rate=1.0",
+            "payment.external.chaos.enabled=true",
+            "payment.external.chaos.timeout-rate=0.0",
+            "payment.external.chaos.failure-rate=1.0",
             "payment.reconcile.enabled=false"
     })
     @AutoConfigureMockMvc

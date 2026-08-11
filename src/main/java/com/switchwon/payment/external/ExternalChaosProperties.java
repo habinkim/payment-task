@@ -1,8 +1,8 @@
-package com.switchwon.payment.gateway;
+package com.switchwon.payment.external;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "payment.gateway.chaos")
+@ConfigurationProperties(prefix = "payment.external.chaos")
 public record ExternalChaosProperties(boolean enabled, double timeoutRate, double failureRate) {
 
     public ExternalChaosProperties {

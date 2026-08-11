@@ -2,9 +2,9 @@ package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.error.ApiException;
-import com.switchwon.payment.gateway.ExternalInquiry;
-import com.switchwon.payment.gateway.ExternalInquiryResult;
-import com.switchwon.payment.gateway.ExternalPaymentClient;
+import com.switchwon.payment.external.ExternalInquiry;
+import com.switchwon.payment.external.ExternalInquiryResult;
+import com.switchwon.payment.external.ExternalPaymentClient;
 import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import org.junit.jupiter.api.DisplayName;

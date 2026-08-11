@@ -1,7 +1,7 @@
 package com.switchwon.payment.payment.service;
 
-import com.switchwon.payment.gateway.ExternalApproval;
-import com.switchwon.payment.gateway.ExternalInquiry;
+import com.switchwon.payment.external.ExternalApproval;
+import com.switchwon.payment.external.ExternalInquiry;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentLedgerStore;
 import com.switchwon.payment.payment.domain.PaymentStatus;

@@ -2,9 +2,9 @@ package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.error.ApiException;
-import com.switchwon.payment.gateway.ExternalApproval;
-import com.switchwon.payment.gateway.ExternalInquiry;
-import com.switchwon.payment.gateway.ExternalInquiryResult;
+import com.switchwon.payment.external.ExternalApproval;
+import com.switchwon.payment.external.ExternalInquiry;
+import com.switchwon.payment.external.ExternalInquiryResult;
 import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentLedgerStore;

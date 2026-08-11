@@ -1,18 +1,18 @@
-package com.switchwon.payment.gateway.infra;
+package com.switchwon.payment.external.infra;
 
-import com.switchwon.payment.gateway.ExternalApproval;
-import com.switchwon.payment.gateway.ExternalApprovalRequest;
-import com.switchwon.payment.gateway.ExternalChaosProperties;
-import com.switchwon.payment.gateway.ExternalInquiry;
-import com.switchwon.payment.gateway.ExternalScenario;
-import com.switchwon.payment.gateway.ExternalPaymentClient;
+import com.switchwon.payment.external.ExternalApproval;
+import com.switchwon.payment.external.ExternalApprovalRequest;
+import com.switchwon.payment.external.ExternalChaosProperties;
+import com.switchwon.payment.external.ExternalInquiry;
+import com.switchwon.payment.external.ExternalScenario;
+import com.switchwon.payment.external.ExternalPaymentClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Random;
 import java.util.UUID;
 
-@ConditionalOnProperty(name = "payment.gateway.mode", havingValue = "mock", matchIfMissing = true)
+@ConditionalOnProperty(name = "payment.external.mode", havingValue = "mock", matchIfMissing = true)
 @Component
 public class MockExternalPaymentClient implements ExternalPaymentClient {
 

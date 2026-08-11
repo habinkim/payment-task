@@ -34,7 +34,7 @@ server:
   port: 18080
 
 payment:
-  gateway:
+  external:
     mode: mock
     chaos:
       enabled: false

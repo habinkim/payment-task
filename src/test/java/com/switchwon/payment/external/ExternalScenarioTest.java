@@ -1,4 +1,4 @@
-package com.switchwon.payment.gateway;
+package com.switchwon.payment.external;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

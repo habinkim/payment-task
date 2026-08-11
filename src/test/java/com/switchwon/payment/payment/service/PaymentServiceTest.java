@@ -2,9 +2,9 @@ package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.error.ApiException;
-import com.switchwon.payment.gateway.ExternalApproval;
-import com.switchwon.payment.gateway.ExternalApprovalRequest;
-import com.switchwon.payment.gateway.ExternalPaymentClient;
+import com.switchwon.payment.external.ExternalApproval;
+import com.switchwon.payment.external.ExternalApprovalRequest;
+import com.switchwon.payment.external.ExternalPaymentClient;
 import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentStatus;
@@ -143,7 +143,7 @@ class PaymentServiceTest {
 
         verify(transaction).settle(org.mockito.ArgumentMatchers.eq(payment),
                 org.mockito.ArgumentMatchers.argThat(
-                        a -> a.result() == com.switchwon.payment.gateway.ExternalApprovalResult.IN_DOUBT));
+                        a -> a.result() == com.switchwon.payment.external.ExternalApprovalResult.IN_DOUBT));
     }
 
     @Test

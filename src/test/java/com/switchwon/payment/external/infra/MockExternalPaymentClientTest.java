@@ -1,11 +1,11 @@
-package com.switchwon.payment.gateway.infra;
+package com.switchwon.payment.external.infra;
 
-import com.switchwon.payment.gateway.ExternalApproval;
-import com.switchwon.payment.gateway.ExternalApprovalRequest;
-import com.switchwon.payment.gateway.ExternalChaosProperties;
-import com.switchwon.payment.gateway.ExternalInquiry;
-import com.switchwon.payment.gateway.ExternalApprovalResult;
-import com.switchwon.payment.gateway.ExternalInquiryResult;
+import com.switchwon.payment.external.ExternalApproval;
+import com.switchwon.payment.external.ExternalApprovalRequest;
+import com.switchwon.payment.external.ExternalChaosProperties;
+import com.switchwon.payment.external.ExternalInquiry;
+import com.switchwon.payment.external.ExternalApprovalResult;
+import com.switchwon.payment.external.ExternalInquiryResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

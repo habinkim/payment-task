@@ -1,4 +1,4 @@
-package com.switchwon.payment.gateway;
+package com.switchwon.payment.external;
 
 import java.math.BigDecimal;
 import java.util.Objects;

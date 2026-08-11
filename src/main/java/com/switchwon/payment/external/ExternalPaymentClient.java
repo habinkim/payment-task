@@ -1,4 +1,4 @@
-package com.switchwon.payment.gateway;
+package com.switchwon.payment.external;
 
 public interface ExternalPaymentClient {
 
