@@ -36,11 +36,14 @@ server:
 payment:
   gateway:
     mode: mock
-    base-url: http://localhost:18080/not-used
-    connect-timeout: 1s
-    read-timeout: 3s
+    chaos:
+      enabled: false
+      timeout-rate: 0.0
+      failure-rate: 0.0
   reconcile:
+    enabled: true
     fixed-delay: 60s
+    batch-size: 50
 
 management:
   endpoints:
