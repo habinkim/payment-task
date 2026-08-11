@@ -3,6 +3,8 @@ package com.switchwon.payment.payment.service;
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.error.ApiException;
 import com.switchwon.payment.gateway.GatewayApproval;
+import com.switchwon.payment.gateway.GatewayInquiry;
+import com.switchwon.payment.gateway.InquiryResult;
 import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.infra.PaymentLedgerStore;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -70,6 +73,43 @@ public class PaymentTransactionService {
         ledgerStore.updateState(payment);
         metrics.recordResult(payment);
         return payment;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Payment> findOldestUnknown(int limit) {
+        return ledgerStore.findOldestUnknown(limit);
+    }
+
+    @Transactional
+    public Payment confirm(Payment payment, GatewayInquiry inquiry) {
+        if (inquiry.result() == InquiryResult.STILL_UNKNOWN) {
+            metrics.recordReconcile(inquiry.result().name());
+            return payment;
+        }
+
+        Instant now = Instant.now(clock);
+        switch (inquiry.result()) {
+            case APPROVED -> confirmApproved(payment, inquiry, now);
+            case DECLINED -> payment.fail(FailureReason.PAYMENT_DECLINED, false, inquiry.externalResponseCode(), now);
+            case NOT_FOUND -> payment.fail(FailureReason.SYSTEM_ERROR, false, inquiry.externalResponseCode(), now);
+            case STILL_UNKNOWN -> throw new IllegalStateException("위에서 걸러졌어야 합니다");
+        }
+
+        ledgerStore.updateState(payment);
+        metrics.recordResult(payment);
+        metrics.recordReconcile(payment.status().name());
+        return payment;
+    }
+
+    private void confirmApproved(Payment payment, GatewayInquiry inquiry, Instant now) {
+        if (walletStore.deductIfEnough(payment.walletId(), payment.amount())) {
+            payment.complete(inquiry.externalTransactionId(), inquiry.externalResponseCode(), now);
+            return;
+        }
+
+        payment.fail(FailureReason.INSUFFICIENT_BALANCE, false, inquiry.externalResponseCode(), now);
+        payment.recordExternalApproval(inquiry.externalTransactionId());
+        metrics.recordOrphan(payment);
     }
 
     private void settleApproved(Payment payment, GatewayApproval approval, Instant now) {

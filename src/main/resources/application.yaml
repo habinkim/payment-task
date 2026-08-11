@@ -41,7 +41,7 @@ payment:
       timeout-rate: 0.0
       failure-rate: 0.0
   reconcile:
-    enabled: true
+    enabled: false
     fixed-delay: 60s
     batch-size: 50
 

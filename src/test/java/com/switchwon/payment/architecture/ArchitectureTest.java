@@ -148,6 +148,14 @@ class ArchitectureTest {
         }
 
         @Test
+        @DisplayName("스케줄러는 저장소를 직접 잡지 않는다")
+        void schedulerDoesNotTouchStore() {
+            noClasses().that().haveSimpleNameEndingWith("Scheduler")
+                    .should().dependOnClassesThat().haveSimpleNameEndingWith("Store")
+                    .check(classesUnderTest);
+        }
+
+        @Test
         @DisplayName("컨트롤러는 스프링 페이지 타입을 응답으로 내보내지 않는다")
         void controllerDoesNotExposeSpringPage() {
             noMethods().that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Controller")
