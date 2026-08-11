@@ -2,9 +2,9 @@ package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.error.ApiException;
-import com.switchwon.payment.gateway.GatewayApproval;
-import com.switchwon.payment.gateway.GatewayInquiry;
-import com.switchwon.payment.gateway.InquiryResult;
+import com.switchwon.payment.gateway.ExternalApproval;
+import com.switchwon.payment.gateway.ExternalInquiry;
+import com.switchwon.payment.gateway.ExternalInquiryResult;
 import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentLedgerStore;
@@ -59,7 +59,7 @@ public class PaymentTransactionService {
     }
 
     @Transactional
-    public Payment settle(Payment payment, GatewayApproval approval) {
+    public Payment settle(Payment payment, ExternalApproval approval) {
         Instant now = Instant.now(clock);
 
         switch (approval.result()) {
@@ -81,8 +81,8 @@ public class PaymentTransactionService {
     }
 
     @Transactional
-    public Payment confirm(Payment payment, GatewayInquiry inquiry) {
-        if (inquiry.result() == InquiryResult.STILL_UNKNOWN) {
+    public Payment confirm(Payment payment, ExternalInquiry inquiry) {
+        if (inquiry.result() == ExternalInquiryResult.STILL_UNKNOWN) {
             metrics.recordReconcile(inquiry.result().name());
             return payment;
         }
@@ -101,7 +101,7 @@ public class PaymentTransactionService {
         return payment;
     }
 
-    private void confirmApproved(Payment payment, GatewayInquiry inquiry, Instant now) {
+    private void confirmApproved(Payment payment, ExternalInquiry inquiry, Instant now) {
         if (walletStore.deductIfEnough(payment.walletId(), payment.amount())) {
             payment.complete(inquiry.externalTransactionId(), inquiry.externalResponseCode(), now);
             return;
@@ -112,7 +112,7 @@ public class PaymentTransactionService {
         metrics.recordOrphan(payment);
     }
 
-    private void settleApproved(Payment payment, GatewayApproval approval, Instant now) {
+    private void settleApproved(Payment payment, ExternalApproval approval, Instant now) {
         if (walletStore.deductIfEnough(payment.walletId(), payment.amount())) {
             payment.complete(approval.externalTransactionId(), approval.externalResponseCode(), now);
             return;

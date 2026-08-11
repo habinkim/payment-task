@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class GatewayScenarioTest {
+class ExternalScenarioTest {
 
     @ParameterizedTest(name = "{0} -> {1}")
     @DisplayName("결제번호 접두어로 시나리오를 판정한다")
@@ -19,25 +19,25 @@ class GatewayScenarioTest {
             "SLOW-20260811-001,    SLOW",
             "PAY-20260811-001,     APPROVED"
     })
-    void resolvesByPrefix(String paymentNo, GatewayScenario expected) {
-        assertThat(GatewayScenario.from(paymentNo)).isEqualTo(expected);
+    void resolvesByPrefix(String paymentNo, ExternalScenario expected) {
+        assertThat(ExternalScenario.from(paymentNo)).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("접두어가 없으면 정상 승인으로 판정한다")
     void defaultsToApproved() {
-        assertThat(GatewayScenario.from("ORDER-1")).isEqualTo(GatewayScenario.APPROVED);
+        assertThat(ExternalScenario.from("ORDER-1")).isEqualTo(ExternalScenario.APPROVED);
     }
 
     @Test
     @DisplayName("결제번호가 없으면 정상 승인으로 판정한다")
     void nullPaymentNoIsApproved() {
-        assertThat(GatewayScenario.from(null)).isEqualTo(GatewayScenario.APPROVED);
+        assertThat(ExternalScenario.from(null)).isEqualTo(ExternalScenario.APPROVED);
     }
 
     @Test
     @DisplayName("접두어가 중간에 있으면 시나리오로 보지 않는다")
     void prefixMustBeAtStart() {
-        assertThat(GatewayScenario.from("PAY-TIMEOUT-001")).isEqualTo(GatewayScenario.APPROVED);
+        assertThat(ExternalScenario.from("PAY-TIMEOUT-001")).isEqualTo(ExternalScenario.APPROVED);
     }
 }

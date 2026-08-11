@@ -1,7 +1,7 @@
 package com.switchwon.payment.payment.service;
 
-import com.switchwon.payment.gateway.GatewayApproval;
-import com.switchwon.payment.gateway.GatewayInquiry;
+import com.switchwon.payment.gateway.ExternalApproval;
+import com.switchwon.payment.gateway.ExternalInquiry;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentLedgerStore;
 import com.switchwon.payment.payment.domain.PaymentStatus;
@@ -47,7 +47,7 @@ class SettleAtomicityIT {
 
     private Payment unknown(String prefix) {
         Payment payment = pending(prefix);
-        return transaction.settle(payment, GatewayApproval.inDoubt("TIMEOUT"));
+        return transaction.settle(payment, ExternalApproval.inDoubt("TIMEOUT"));
     }
 
     @Test
@@ -58,7 +58,7 @@ class SettleAtomicityIT {
 
         willThrow(new RuntimeException("커밋 직전 폭발")).given(metrics).recordResult(any());
 
-        assertThatThrownBy(() -> transaction.settle(payment, GatewayApproval.approved("TXN-A", "0000")))
+        assertThatThrownBy(() -> transaction.settle(payment, ExternalApproval.approved("TXN-A", "0000")))
                 .isInstanceOf(RuntimeException.class);
 
         assertThat(balance()).as("차감이 롤백되어야 한다").isEqualByComparingTo(before);
@@ -75,7 +75,7 @@ class SettleAtomicityIT {
 
         willThrow(new RuntimeException("두 쓰기 사이에서 폭발")).given(ledgerStore).updateState(any());
 
-        assertThatThrownBy(() -> transaction.settle(payment, GatewayApproval.approved("TXN-B", "0000")))
+        assertThatThrownBy(() -> transaction.settle(payment, ExternalApproval.approved("TXN-B", "0000")))
                 .isInstanceOf(RuntimeException.class);
 
         assertThat(balance())
@@ -91,7 +91,7 @@ class SettleAtomicityIT {
 
         willThrow(new RuntimeException("확정 직전 폭발")).given(metrics).recordResult(any());
 
-        assertThatThrownBy(() -> transaction.confirm(payment, GatewayInquiry.approved("TXN-C", "0000")))
+        assertThatThrownBy(() -> transaction.confirm(payment, ExternalInquiry.approved("TXN-C", "0000")))
                 .isInstanceOf(RuntimeException.class);
 
         assertThat(balance()).as("차감이 롤백되어야 한다").isEqualByComparingTo(before);
@@ -107,7 +107,7 @@ class SettleAtomicityIT {
 
         willThrow(new RuntimeException("확정 실패")).given(metrics).recordResult(any());
 
-        assertThatThrownBy(() -> transaction.settle(payment, GatewayApproval.approved("TXN-D", "0000")))
+        assertThatThrownBy(() -> transaction.settle(payment, ExternalApproval.approved("TXN-D", "0000")))
                 .isInstanceOf(RuntimeException.class);
 
         assertThat(transaction.findExisting(payment.paymentNo()))

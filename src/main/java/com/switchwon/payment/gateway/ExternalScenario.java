@@ -2,7 +2,7 @@ package com.switchwon.payment.gateway;
 
 import java.util.Arrays;
 
-public enum GatewayScenario {
+public enum ExternalScenario {
 
     TIMEOUT("TIMEOUT-"),
     SERVER_ERROR("ERR500-"),
@@ -13,11 +13,11 @@ public enum GatewayScenario {
 
     private final String prefix;
 
-    GatewayScenario(String prefix) {
+    ExternalScenario(String prefix) {
         this.prefix = prefix;
     }
 
-    public static GatewayScenario from(String paymentNo) {
+    public static ExternalScenario from(String paymentNo) {
         if (paymentNo == null) {
             return APPROVED;
         }

@@ -1,6 +1,6 @@
 package com.switchwon.payment.gateway;
 
-public enum GatewayResult {
+public enum ExternalApprovalResult {
     APPROVED,
 
     DECLINED,

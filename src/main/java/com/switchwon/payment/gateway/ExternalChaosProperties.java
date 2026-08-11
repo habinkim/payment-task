@@ -3,9 +3,9 @@ package com.switchwon.payment.gateway;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "payment.gateway.chaos")
-public record GatewayChaosProperties(boolean enabled, double timeoutRate, double failureRate) {
+public record ExternalChaosProperties(boolean enabled, double timeoutRate, double failureRate) {
 
-    public GatewayChaosProperties {
+    public ExternalChaosProperties {
         if (timeoutRate < 0 || failureRate < 0) {
             throw new IllegalArgumentException(
                     "장애 주입 확률은 음수일 수 없습니다: timeoutRate=" + timeoutRate + ", failureRate=" + failureRate);
@@ -17,8 +17,8 @@ public record GatewayChaosProperties(boolean enabled, double timeoutRate, double
         }
     }
 
-    public static GatewayChaosProperties disabled() {
-        return new GatewayChaosProperties(false, 0.0, 0.0);
+    public static ExternalChaosProperties disabled() {
+        return new ExternalChaosProperties(false, 0.0, 0.0);
     }
 
     public double failureThreshold() {

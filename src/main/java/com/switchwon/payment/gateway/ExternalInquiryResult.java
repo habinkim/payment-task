@@ -1,6 +1,6 @@
 package com.switchwon.payment.gateway;
 
-public enum InquiryResult {
+public enum ExternalInquiryResult {
 
     APPROVED,
 

@@ -2,9 +2,9 @@ package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.common.ResponseCode;
 import com.switchwon.payment.error.ApiException;
-import com.switchwon.payment.gateway.GatewayInquiry;
-import com.switchwon.payment.gateway.InquiryResult;
-import com.switchwon.payment.gateway.PaymentGatewayClient;
+import com.switchwon.payment.gateway.ExternalInquiry;
+import com.switchwon.payment.gateway.ExternalInquiryResult;
+import com.switchwon.payment.gateway.ExternalPaymentClient;
 import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +36,7 @@ class ReconcileServiceTest {
     private PaymentTransactionService transaction;
 
     @Mock
-    private PaymentGatewayClient gateway;
+    private ExternalPaymentClient gateway;
 
     @InjectMocks
     private ReconcileService service;
@@ -55,7 +55,7 @@ class ReconcileServiceTest {
     @DisplayName("결과 미상 건을 조회해 확정한다")
     void confirmsUnknownPayment() {
         Payment target = unknownPayment();
-        GatewayInquiry inquiry = GatewayInquiry.approved("TXN-1", "0000");
+        ExternalInquiry inquiry = ExternalInquiry.approved("TXN-1", "0000");
         given(transaction.findExisting(PAYMENT_NO)).willReturn(Optional.of(target));
         given(gateway.inquire(PAYMENT_NO)).willReturn(inquiry);
         given(transaction.confirm(target, inquiry)).willReturn(target);
@@ -125,7 +125,7 @@ class ReconcileServiceTest {
 
         verify(transaction).confirm(
                 org.mockito.ArgumentMatchers.eq(target),
-                org.mockito.ArgumentMatchers.argThat(i -> i.result() == InquiryResult.STILL_UNKNOWN));
+                org.mockito.ArgumentMatchers.argThat(i -> i.result() == ExternalInquiryResult.STILL_UNKNOWN));
     }
 
     @Test
