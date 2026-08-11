@@ -54,7 +54,17 @@ management:
 
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
+    enabled: false
+  api-docs:
+    path: /v3/api-docs
+  paths-to-match: /api/**
+
+scalar:
+  enabled: true
+  url: /v3/api-docs
+  path: /scalar
+  page-title: 스위치원 결제 API
+  dark-mode: true
 
 ---
 spring:
