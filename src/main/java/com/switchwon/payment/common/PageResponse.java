@@ -1,7 +1,7 @@
 package com.switchwon.payment.common;
 
+import com.switchwon.payment.common.page.PageResult;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.function.Function;
@@ -25,12 +25,12 @@ public record PageResponse<T>(
         boolean hasNext
 ) {
 
-    public static <E, T> PageResponse<T> of(Page<E> page, Function<E, T> mapper) {
+    public static <E, T> PageResponse<T> of(PageResult<E> result, Function<E, T> mapper) {
         return new PageResponse<>(
-                page.getContent().stream().map(mapper).toList(),
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.hasNext());
+                result.content().stream().map(mapper).toList(),
+                result.page(),
+                result.size(),
+                result.totalElements(),
+                result.hasNext());
     }
 }

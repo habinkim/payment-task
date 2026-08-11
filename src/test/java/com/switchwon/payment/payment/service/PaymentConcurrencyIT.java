@@ -1,7 +1,7 @@
 package com.switchwon.payment.payment.service;
 
 import com.switchwon.payment.payment.domain.PaymentStatus;
-import com.switchwon.payment.wallet.infra.WalletStore;
+import com.switchwon.payment.wallet.domain.WalletStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

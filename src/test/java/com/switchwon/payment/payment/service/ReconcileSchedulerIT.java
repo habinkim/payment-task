@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.switchwon.payment.payment.controller.dto.PaymentRequest;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentStatus;
-import com.switchwon.payment.payment.infra.PaymentLedgerStore;
+import com.switchwon.payment.payment.domain.PaymentLedgerStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

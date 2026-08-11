@@ -40,6 +40,8 @@ payment/
 └── infra/      PaymentEntity, PaymentRepository, PaymentLedgerStore
 ```
 
+> **저장소 배치는 [ADR 0010](0010-store-interface-in-domain.md)이 대체한다(Superseded).** `PaymentLedgerStore`는 도메인의 인터페이스와 인프라의 구현(`JpaPaymentLedgerStore`)으로 갈렸다. 도메인 객체와 엔티티를 분리한다는 이 문서의 결정 자체는 유효하다.
+
 `PaymentEntity`는 JPA가 요구하는 것을 전부 받아들인다. 기본 생성자를 열고, 필드 접근을 허용하고, 세터를 두어도 무방하다. 이 클래스의 책임은 테이블 한 행을 표현하는 것뿐이며 비즈니스 규칙을 갖지 않는다.
 
 변환은 `PaymentLedgerStore` 캡슐이 담당한다. 서비스는 캡슐을 통해 도메인 객체를 받고 도메인 객체를 넘긴다. `PaymentEntity`의 존재를 알지 못한다.

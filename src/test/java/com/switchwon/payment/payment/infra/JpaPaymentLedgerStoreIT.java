@@ -19,10 +19,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-class PaymentLedgerStoreIT {
+class JpaPaymentLedgerStoreIT {
 
     @Autowired
-    private PaymentLedgerStore store;
+    private JpaPaymentLedgerStore store;
 
     @Autowired
     private EntityManager em;
