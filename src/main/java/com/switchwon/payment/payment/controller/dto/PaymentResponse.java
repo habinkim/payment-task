@@ -58,7 +58,10 @@ public record PaymentResponse(
         Instant requestedAt,
 
         @Schema(description = "게이트웨이 응답 수신 시각. 요청 시각과의 차이가 곧 소요 시간이다.", example = "2026-08-11T00:00:01Z")
-        Instant respondedAt
+        Instant respondedAt,
+
+        @Schema(description = "원장 기록 시각. 목록 조회는 이 값의 내림차순으로 정렬된다.", example = "2026-08-11T00:00:00Z")
+        Instant createdAt
 ) {
 
     public static PaymentResponse from(Payment payment) {
@@ -73,6 +76,7 @@ public record PaymentResponse(
                 payment.externalTransactionId(),
                 payment.externalResponseCode(),
                 payment.requestedAt(),
-                payment.respondedAt());
+                payment.respondedAt(),
+                payment.createdAt());
     }
 }

@@ -20,6 +20,7 @@ public class Payment {
     private String externalResponseCode;
     private Instant requestedAt;
     private Instant respondedAt;
+    private Instant createdAt;
 
     public Payment(String paymentNo, Long walletId, BigDecimal amount, String currency) {
         if (paymentNo == null || !PAYMENT_NO.matcher(paymentNo).matches()) {
@@ -45,7 +46,7 @@ public class Payment {
     public static Payment restore(String paymentNo, Long walletId, BigDecimal amount, String currency,
                                   PaymentStatus status, FailureReason failureReason, Boolean retriable,
                                   String externalTransactionId, String externalResponseCode,
-                                  Instant requestedAt, Instant respondedAt) {
+                                  Instant requestedAt, Instant respondedAt, Instant createdAt) {
         Payment payment = new Payment(paymentNo, walletId, amount, currency);
         payment.status = status;
         payment.failureReason = failureReason;
@@ -54,6 +55,7 @@ public class Payment {
         payment.externalResponseCode = externalResponseCode;
         payment.requestedAt = requestedAt;
         payment.respondedAt = respondedAt;
+        payment.createdAt = createdAt;
         return payment;
     }
 
@@ -152,5 +154,9 @@ public class Payment {
 
     public Instant respondedAt() {
         return respondedAt;
+    }
+
+    public Instant createdAt() {
+        return createdAt;
     }
 }

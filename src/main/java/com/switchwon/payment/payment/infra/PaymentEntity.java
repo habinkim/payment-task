@@ -97,6 +97,6 @@ public class PaymentEntity {
                 paymentNo, walletId, amount, currency,
                 status, failureReason, retriable,
                 externalTransactionId, externalResponseCode,
-                requestedAt, respondedAt);
+                requestedAt, respondedAt, createdAt);
     }
 }

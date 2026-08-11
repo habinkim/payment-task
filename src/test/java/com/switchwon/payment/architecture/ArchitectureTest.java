@@ -15,6 +15,7 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEn
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 
 class ArchitectureTest {
     private static final String PAYMENT_DOMAIN = "..payment.domain..";
@@ -130,19 +131,28 @@ class ArchitectureTest {
         }
 
         @Test
-        @DisplayName("오케스트레이터는 저장소를 직접 잡지 않는다")
+        @DisplayName("게이트웨이를 호출하는 오케스트레이터는 저장소를 직접 잡지 않는다")
         void orchestratorDoesNotTouchStore() {
-            noClasses().that().haveSimpleName("PaymentService")
+            noClasses().that().haveSimpleName("PaymentService").or().haveSimpleName("ReconcileService")
                     .should().dependOnClassesThat().haveSimpleNameEndingWith("Store")
                     .check(classesUnderTest);
         }
 
         @Test
-        @DisplayName("트랜잭션 경계는 전용 서비스에만 존재한다")
+        @DisplayName("게이트웨이를 호출하는 오케스트레이터에는 트랜잭션 경계가 없다")
         void transactionalOnlyInTransactionService() {
-            noClasses().that().haveSimpleName("PaymentService")
+            noClasses().that().haveSimpleName("PaymentService").or().haveSimpleName("ReconcileService")
                     .should().dependOnClassesThat()
                     .haveFullyQualifiedName("org.springframework.transaction.annotation.Transactional")
+                    .check(classesUnderTest);
+        }
+
+        @Test
+        @DisplayName("컨트롤러는 스프링 페이지 타입을 응답으로 내보내지 않는다")
+        void controllerDoesNotExposeSpringPage() {
+            noMethods().that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Controller")
+                    .and().arePublic()
+                    .should().haveRawReturnType(org.springframework.data.domain.Page.class)
                     .check(classesUnderTest);
         }
     }
