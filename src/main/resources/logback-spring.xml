@@ -13,32 +13,35 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/app.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/app.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>14</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${FILE_PATTERN}</pattern>
-        </encoder>
-    </appender>
-
-    <springProfile name="dev">
-        <logger name="com.switchwon.payment" level="DEBUG"/>
-        <logger name="org.hibernate.SQL" level="DEBUG"/>
-        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/>
-        <logger name="org.hibernate.orm.jdbc.extract" level="TRACE"/>
+    <springProfile name="!prod">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>
     </springProfile>
 
     <springProfile name="prod">
-        <logger name="com.switchwon.payment" level="INFO"/>
-        <root level="WARN">
-            <appender-ref ref="CONSOLE"/>
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_DIR}/app.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_DIR}/app.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                <maxFileSize>100MB</maxFileSize>
+                <maxHistory>14</maxHistory>
+                <totalSizeCap>3GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${FILE_PATTERN}</pattern>
+            </encoder>
+        </appender>
+
+        <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
             <appender-ref ref="FILE"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
         </root>
     </springProfile>
 
