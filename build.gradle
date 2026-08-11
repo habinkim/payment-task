@@ -42,6 +42,11 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+        showStandardStreams = project.hasProperty('showSql')
+    }
 }
 
 jacocoTestReport {

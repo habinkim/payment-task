@@ -20,6 +20,8 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+        format_sql: true
+        highlight_sql: true
 
   flyway:
     enabled: true
@@ -34,6 +36,7 @@ server:
 
 payment:
   gateway:
+    mode: mock
     base-url: http://localhost:18080/not-used
     connect-timeout: 1s
     read-timeout: 3s
@@ -59,18 +62,8 @@ spring:
     activate:
       on-profile: dev
 
-logging:
-  level:
-    root: INFO
-    com.switchwon.payment: DEBUG
-
 ---
 spring:
   config:
     activate:
       on-profile: prod
-
-logging:
-  level:
-    root: WARN
-    com.switchwon.payment: INFO
