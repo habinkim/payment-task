@@ -5,7 +5,9 @@ public enum GatewayResult {
 
     DECLINED,
 
-    FAILED,
+    FAILED_RETRIABLE,
+
+    FAILED_PERMANENT,
 
     IN_DOUBT
 }

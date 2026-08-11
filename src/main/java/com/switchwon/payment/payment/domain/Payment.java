@@ -61,6 +61,14 @@ public class Payment {
         this.requestedAt = requestedAt;
     }
 
+    public void recordExternalApproval(String externalTransactionId) {
+        if (status != PaymentStatus.FAILED) {
+            throw new IllegalStateException(
+                    "실패한 결제에만 외부 승인 사실을 남길 수 있습니다: " + status + " (paymentNo=" + paymentNo + ")");
+        }
+        this.externalTransactionId = externalTransactionId;
+    }
+
     public void complete(String externalTransactionId, String externalResponseCode, Instant respondedAt) {
         transitionTo(PaymentStatus.COMPLETED);
         this.externalTransactionId = externalTransactionId;

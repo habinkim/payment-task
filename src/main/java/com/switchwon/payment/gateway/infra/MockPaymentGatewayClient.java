@@ -23,8 +23,8 @@ public class MockPaymentGatewayClient implements PaymentGatewayClient {
     public GatewayApproval approve(GatewayApprovalRequest request) {
         return switch (GatewayScenario.from(request.paymentNo())) {
             case TIMEOUT -> GatewayApproval.inDoubt(TIMEOUT_CODE);
-            case SERVER_ERROR -> GatewayApproval.failed(SERVER_ERROR_CODE);
-            case BAD_REQUEST -> GatewayApproval.failed(BAD_REQUEST_CODE);
+            case SERVER_ERROR -> GatewayApproval.failedRetriable(SERVER_ERROR_CODE);
+            case BAD_REQUEST -> GatewayApproval.failedPermanent(BAD_REQUEST_CODE);
             case DECLINED -> GatewayApproval.declined(DECLINED_CODE);
             case SLOW, APPROVED -> GatewayApproval.approved(newTransactionId(), APPROVED_CODE);
         };
