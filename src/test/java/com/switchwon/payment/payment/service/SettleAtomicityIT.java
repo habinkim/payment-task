@@ -62,7 +62,7 @@ class SettleAtomicityIT {
                 .isInstanceOf(RuntimeException.class);
 
         assertThat(balance()).as("차감이 롤백되어야 한다").isEqualByComparingTo(before);
-        assertThat(transaction.findExisting(payment.paymentNo()).orElseThrow().status())
+        assertThat(transaction.findExisting(payment.merchantPaymentNo()).orElseThrow().status())
                 .as("원장도 확정 전 상태로 남아야 한다")
                 .isEqualTo(PaymentStatus.PENDING);
     }
@@ -95,7 +95,7 @@ class SettleAtomicityIT {
                 .isInstanceOf(RuntimeException.class);
 
         assertThat(balance()).as("차감이 롤백되어야 한다").isEqualByComparingTo(before);
-        assertThat(transaction.findExisting(payment.paymentNo()).orElseThrow().status())
+        assertThat(transaction.findExisting(payment.merchantPaymentNo()).orElseThrow().status())
                 .as("원장은 결과 미상 그대로여야 한다")
                 .isEqualTo(PaymentStatus.UNKNOWN);
     }
@@ -110,7 +110,7 @@ class SettleAtomicityIT {
         assertThatThrownBy(() -> transaction.settle(payment, ExternalApproval.approved("TXN-D", "0000")))
                 .isInstanceOf(RuntimeException.class);
 
-        assertThat(transaction.findExisting(payment.paymentNo()))
+        assertThat(transaction.findExisting(payment.merchantPaymentNo()))
                 .as("확정이 실패해도 처리 중 원장은 남아 정합성 확인이 주워갈 수 있다")
                 .isPresent();
     }

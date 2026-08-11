@@ -35,7 +35,7 @@ public class MockExternalPaymentClient implements ExternalPaymentClient {
 
     @Override
     public ExternalApproval approve(ExternalApprovalRequest request) {
-        ExternalScenario scenario = ExternalScenario.from(request.paymentNo());
+        ExternalScenario scenario = ExternalScenario.from(request.merchantPaymentNo());
         if (scenario != ExternalScenario.APPROVED && scenario != ExternalScenario.SLOW) {
             return byScenario(scenario);
         }
@@ -43,8 +43,8 @@ public class MockExternalPaymentClient implements ExternalPaymentClient {
     }
 
     @Override
-    public ExternalInquiry inquire(String paymentNo) {
-        return switch (ExternalScenario.from(paymentNo)) {
+    public ExternalInquiry inquire(String merchantPaymentNo) {
+        return switch (ExternalScenario.from(merchantPaymentNo)) {
             case TIMEOUT -> ExternalInquiry.approved(newTransactionId(), APPROVED_CODE);
             case DECLINED -> ExternalInquiry.declined(newTransactionId(), DECLINED_CODE);
             case SERVER_ERROR -> ExternalInquiry.stillUnknown(SERVER_ERROR_CODE);

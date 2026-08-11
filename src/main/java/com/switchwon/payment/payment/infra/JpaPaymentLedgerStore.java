@@ -34,13 +34,13 @@ public class JpaPaymentLedgerStore implements PaymentLedgerStore {
 
     @Override
     public void updateState(Payment payment) {
-        repository.findByPaymentNo(payment.paymentNo())
+        repository.findByMerchantPaymentNo(payment.merchantPaymentNo())
                 .ifPresent(entity -> entity.applyState(payment, Instant.now(clock)));
     }
 
     @Override
-    public Optional<Payment> findByPaymentNo(String paymentNo) {
-        return repository.findByPaymentNo(paymentNo).map(PaymentEntity::toDomain);
+    public Optional<Payment> findByMerchantPaymentNo(String merchantPaymentNo) {
+        return repository.findByMerchantPaymentNo(merchantPaymentNo).map(PaymentEntity::toDomain);
     }
 
 

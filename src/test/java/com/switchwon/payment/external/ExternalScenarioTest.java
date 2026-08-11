@@ -19,8 +19,8 @@ class ExternalScenarioTest {
             "SLOW-20260811-001,    SLOW",
             "PAY-20260811-001,     APPROVED"
     })
-    void resolvesByPrefix(String paymentNo, ExternalScenario expected) {
-        assertThat(ExternalScenario.from(paymentNo)).isEqualTo(expected);
+    void resolvesByPrefix(String merchantPaymentNo, ExternalScenario expected) {
+        assertThat(ExternalScenario.from(merchantPaymentNo)).isEqualTo(expected);
     }
 
     @Test
@@ -31,7 +31,7 @@ class ExternalScenarioTest {
 
     @Test
     @DisplayName("결제번호가 없으면 정상 승인으로 판정한다")
-    void nullPaymentNoIsApproved() {
+    void nullMerchantPaymentNoIsApproved() {
         assertThat(ExternalScenario.from(null)).isEqualTo(ExternalScenario.APPROVED);
     }
 

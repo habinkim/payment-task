@@ -88,9 +88,9 @@ class PaymentConcurrencyIT {
         assertThat(completed.get()).isEqualTo(1);
     }
 
-    private void countIfCompleted(AtomicInteger counter, String paymentNo) {
+    private void countIfCompleted(AtomicInteger counter, String merchantPaymentNo) {
         var payment = paymentService.pay(
-                new PaymentCommand(paymentNo, POOR_WALLET, new BigDecimal("8.0000"), "USD"));
+                new PaymentCommand(merchantPaymentNo, POOR_WALLET, new BigDecimal("8.0000"), "USD"));
         if (payment.status() == PaymentStatus.COMPLETED) {
             counter.incrementAndGet();
         }
@@ -99,13 +99,13 @@ class PaymentConcurrencyIT {
     @Test
     @DisplayName("같은 결제번호로 동시 요청이 들어와도 한 번만 처리된다")
     void concurrentDuplicateProcessesOnce() throws InterruptedException {
-        String paymentNo = "CONC-DUP-" + System.nanoTime();
+        String merchantPaymentNo = "CONC-DUP-" + System.nanoTime();
         BigDecimal before = balance();
         AtomicInteger succeeded = new AtomicInteger();
 
         List<Runnable> tasks = List.of(
-                () -> countIfCompleted(succeeded, paymentNo),
-                () -> countIfCompleted(succeeded, paymentNo));
+                () -> countIfCompleted(succeeded, merchantPaymentNo),
+                () -> countIfCompleted(succeeded, merchantPaymentNo));
 
         runConcurrently(2, tasks);
 

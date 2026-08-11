@@ -12,7 +12,7 @@ public interface PaymentLedgerStore {
 
     void updateState(Payment payment);
 
-    Optional<Payment> findByPaymentNo(String paymentNo);
+    Optional<Payment> findByMerchantPaymentNo(String merchantPaymentNo);
 
     PageResult<Payment> search(PaymentSearchCondition condition, PageQuery query);
 

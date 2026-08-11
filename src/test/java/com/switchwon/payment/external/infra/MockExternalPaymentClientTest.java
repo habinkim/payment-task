@@ -30,8 +30,8 @@ class MockExternalPaymentClientTest {
         return clientWith(ExternalChaosProperties.disabled());
     }
 
-    private ExternalApproval approve(MockExternalPaymentClient client, String paymentNo) {
-        return client.approve(new ExternalApprovalRequest(paymentNo, new BigDecimal("100"), "USD"));
+    private ExternalApproval approve(MockExternalPaymentClient client, String merchantPaymentNo) {
+        return client.approve(new ExternalApprovalRequest(merchantPaymentNo, new BigDecimal("100"), "USD"));
     }
 
     @Nested

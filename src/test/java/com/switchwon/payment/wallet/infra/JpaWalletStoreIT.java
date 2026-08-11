@@ -103,7 +103,7 @@ class JpaWalletStoreIT {
         payment.complete("TXN-CLEAR", "0000", Instant.parse("2026-08-11T00:00:00Z"));
         ledgerStore.updateState(payment);
 
-        Payment found = ledgerStore.findByPaymentNo("PAY-CLEAR").orElseThrow();
+        Payment found = ledgerStore.findByMerchantPaymentNo("PAY-CLEAR").orElseThrow();
         assertThat(found.status()).isEqualTo(PaymentStatus.COMPLETED);
         assertThat(found.externalTransactionId()).isEqualTo("TXN-CLEAR");
     }

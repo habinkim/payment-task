@@ -1,5 +1,5 @@
 -- 지갑 충전 이력
--- charge_no 는 호출자가 생성하며 멱등 키다. 결제(uk_payment_no)와 같은 원리다.
+-- charge_no 는 호출자가 생성하며 멱등 키다. 결제(uk_merchant_payment_no)와 같은 원리다.
 -- status 컬럼이 없는 이유: 충전은 외부 승인을 거치지 않아 중간 상태가 존재하지 않는다.
 -- 성공하면 행이 있고 실패하면 트랜잭션이 롤백되어 행이 없다.
 CREATE TABLE wallet_charge

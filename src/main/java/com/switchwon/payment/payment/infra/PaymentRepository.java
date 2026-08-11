@@ -13,9 +13,9 @@ import java.util.Optional;
 
 interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
 
-    Optional<PaymentEntity> findByPaymentNo(String paymentNo);
+    Optional<PaymentEntity> findByMerchantPaymentNo(String merchantPaymentNo);
 
-    boolean existsByPaymentNo(String paymentNo);
+    boolean existsByMerchantPaymentNo(String merchantPaymentNo);
 
     @Query("""
             select p from PaymentEntity p

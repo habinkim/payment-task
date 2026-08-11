@@ -17,13 +17,13 @@ public enum ExternalScenario {
         this.prefix = prefix;
     }
 
-    public static ExternalScenario from(String paymentNo) {
-        if (paymentNo == null) {
+    public static ExternalScenario from(String merchantPaymentNo) {
+        if (merchantPaymentNo == null) {
             return APPROVED;
         }
         return Arrays.stream(values())
                 .filter(scenario -> !scenario.prefix.isEmpty())
-                .filter(scenario -> paymentNo.startsWith(scenario.prefix))
+                .filter(scenario -> merchantPaymentNo.startsWith(scenario.prefix))
                 .findFirst()
                 .orElse(APPROVED);
     }

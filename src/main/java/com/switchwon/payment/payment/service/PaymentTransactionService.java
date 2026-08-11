@@ -31,8 +31,8 @@ public class PaymentTransactionService {
     private final Clock clock;
 
     @Transactional(readOnly = true)
-    public Optional<Payment> findExisting(String paymentNo) {
-        return ledgerStore.findByPaymentNo(paymentNo);
+    public Optional<Payment> findExisting(String merchantPaymentNo) {
+        return ledgerStore.findByMerchantPaymentNo(merchantPaymentNo);
     }
 
     @Transactional(readOnly = true)
@@ -42,9 +42,9 @@ public class PaymentTransactionService {
     }
 
     @Transactional
-    public Payment openPending(String paymentNo, Long walletId, BigDecimal amount, String currency) {
+    public Payment openPending(String merchantPaymentNo, Long walletId, BigDecimal amount, String currency) {
         try {
-            return ledgerStore.append(new Payment(paymentNo, walletId, amount, currency));
+            return ledgerStore.append(new Payment(merchantPaymentNo, walletId, amount, currency));
         } catch (DataIntegrityViolationException e) {
             throw new ApiException(ResponseCode.DUPLICATE_PAYMENT_NO);
         }

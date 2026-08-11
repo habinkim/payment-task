@@ -12,7 +12,7 @@ import java.time.Instant;
 public record PaymentResponse(
 
         @Schema(description = "결제번호", example = "PAY-20260811-001")
-        String paymentNo,
+        String merchantPaymentNo,
 
         @Schema(description = "대상 지갑", example = "1")
         Long walletId,
@@ -66,7 +66,7 @@ public record PaymentResponse(
 
     public static PaymentResponse from(Payment payment) {
         return new PaymentResponse(
-                payment.paymentNo(),
+                payment.merchantPaymentNo(),
                 payment.walletId(),
                 payment.amount(),
                 payment.currency(),

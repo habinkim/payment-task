@@ -26,7 +26,7 @@ public class PaymentService {
     private final Clock clock;
 
     public Payment pay(PaymentCommand command) {
-        Optional<Payment> existing = transaction.findExisting(command.paymentNo());
+        Optional<Payment> existing = transaction.findExisting(command.merchantPaymentNo());
         if (existing.isPresent()) {
             return resolveDuplicate(existing.get());
         }
@@ -37,7 +37,7 @@ public class PaymentService {
         }
 
         Payment payment = transaction.openPending(
-                command.paymentNo(), command.walletId(), command.amount(), command.currency());
+                command.merchantPaymentNo(), command.walletId(), command.amount(), command.currency());
 
         if (!wallet.canAfford(command.amount())) {
             return transaction.rejectWithoutGateway(payment, FailureReason.INSUFFICIENT_BALANCE);
@@ -60,7 +60,7 @@ public class PaymentService {
         Timer.Sample sample = metrics.startGatewayTimer();
         try {
             ExternalApproval approval = gateway.approve(new ExternalApprovalRequest(
-                    payment.paymentNo(), payment.amount(), payment.currency()));
+                    payment.merchantPaymentNo(), payment.amount(), payment.currency()));
             metrics.stopGatewayTimer(sample, approval.result().name());
             return approval;
         } catch (RuntimeException e) {

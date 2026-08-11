@@ -18,24 +18,24 @@ public class ReconcileService {
     private final PaymentTransactionService transaction;
     private final ExternalPaymentClient gateway;
 
-    public Payment reconcile(String paymentNo) {
-        Payment payment = transaction.findExisting(paymentNo)
+    public Payment reconcile(String merchantPaymentNo) {
+        Payment payment = transaction.findExisting(merchantPaymentNo)
                 .orElseThrow(() -> new ApiException(ResponseCode.PAYMENT_NOT_FOUND));
 
         if (payment.status() != PaymentStatus.UNKNOWN) {
             return payment;
         }
 
-        return transaction.confirm(payment, inquire(paymentNo));
+        return transaction.confirm(payment, inquire(merchantPaymentNo));
     }
 
     public List<Payment> findTargets(int limit) {
         return transaction.findOldestUnknown(limit);
     }
 
-    private ExternalInquiry inquire(String paymentNo) {
+    private ExternalInquiry inquire(String merchantPaymentNo) {
         try {
-            return gateway.inquire(paymentNo);
+            return gateway.inquire(merchantPaymentNo);
         } catch (RuntimeException e) {
             return ExternalInquiry.stillUnknown(e.getClass().getSimpleName());
         }

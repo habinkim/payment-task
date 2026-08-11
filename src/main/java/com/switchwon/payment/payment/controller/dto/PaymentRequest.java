@@ -25,7 +25,7 @@ public record PaymentRequest(
                 requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank
         @Pattern(regexp = "^[A-Za-z0-9-]{1,64}$")
-        String paymentNo,
+        String merchantPaymentNo,
 
         @Schema(
                 description = "대상 지갑. 1=USD 1000, 2=USD 10(잔액 부족 재현용), 3=JPY 50000(통화 불일치 재현용)",
@@ -54,6 +54,6 @@ public record PaymentRequest(
 ) {
 
     public PaymentCommand toCommand() {
-        return new PaymentCommand(paymentNo, walletId, amount, currency);
+        return new PaymentCommand(merchantPaymentNo, walletId, amount, currency);
     }
 }

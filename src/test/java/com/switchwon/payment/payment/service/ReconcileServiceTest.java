@@ -41,8 +41,8 @@ class ReconcileServiceTest {
     @InjectMocks
     private ReconcileService service;
 
-    private Payment payment(String paymentNo) {
-        return new Payment(paymentNo, 1L, new BigDecimal("100"), "USD");
+    private Payment payment(String merchantPaymentNo) {
+        return new Payment(merchantPaymentNo, 1L, new BigDecimal("100"), "USD");
     }
 
     private Payment unknownPayment() {

@@ -37,9 +37,9 @@ class PaymentApiIT {
     @Autowired
     private WalletStore walletStore;
 
-    private String body(String paymentNo, Long walletId, String amount, String currency) throws Exception {
+    private String body(String merchantPaymentNo, Long walletId, String amount, String currency) throws Exception {
         return objectMapper.writeValueAsString(
-                new PaymentRequest(paymentNo, walletId, new BigDecimal(amount), currency));
+                new PaymentRequest(merchantPaymentNo, walletId, new BigDecimal(amount), currency));
     }
 
     private BigDecimal balanceOf(Long walletId) {
@@ -179,7 +179,7 @@ class PaymentApiIT {
 
     @Test
     @DisplayName("결제번호 형식이 맞지 않으면 요청 단계에서 거부된다")
-    void rejectsInvalidPaymentNo() throws Exception {
+    void rejectsInvalidMerchantPaymentNo() throws Exception {
         mockMvc.perform(post("/api/v1/payments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body("PAY IT 011", RICH_WALLET, "100", "USD")))

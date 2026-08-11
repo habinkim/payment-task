@@ -11,13 +11,13 @@ CREATE TABLE wallet
 );
 
 -- 결제 원장
--- payment_no 는 3rd party 가 생성하며 조회 키이자 멱등 키다(docs/adr/0002).
+-- merchant_payment_no 는 3rd party 가 생성하며 조회 키이자 멱등 키다(docs/adr/0002).
 -- external_transaction_id, external_response_code, retriable 은 명세에 없는 컬럼이다.
 -- 실패 이력을 CS 문의 대응에 쓰려면 게이트웨이 대조와 재시도 안내가 가능해야 한다.
 CREATE TABLE payment
 (
     id                      BIGINT         NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    payment_no              VARCHAR(64)    NOT NULL,
+    merchant_payment_no              VARCHAR(64)    NOT NULL,
     wallet_id               BIGINT         NOT NULL,
     amount                  DECIMAL(19, 4) NOT NULL,
     currency                VARCHAR(3)     NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE payment
     responded_at            TIMESTAMP(6)    NULL,
     created_at              TIMESTAMP(6)   NOT NULL,
     updated_at              TIMESTAMP(6)   NOT NULL,
-    CONSTRAINT uk_payment_no UNIQUE (payment_no),
+    CONSTRAINT uk_merchant_payment_no UNIQUE (merchant_payment_no),
     CONSTRAINT ck_payment_amount_positive CHECK (amount > 0)
 );
 

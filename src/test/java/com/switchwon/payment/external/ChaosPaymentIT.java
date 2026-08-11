@@ -42,17 +42,17 @@ class ChaosPaymentIT {
         @Autowired
         protected WalletStore walletStore;
 
-        protected String body(String paymentNo) throws Exception {
+        protected String body(String merchantPaymentNo) throws Exception {
             return objectMapper.writeValueAsString(
-                    new PaymentRequest(paymentNo, RICH_WALLET, new BigDecimal(AMOUNT), "USD"));
+                    new PaymentRequest(merchantPaymentNo, RICH_WALLET, new BigDecimal(AMOUNT), "USD"));
         }
 
         protected BigDecimal balance() {
             return walletStore.findById(RICH_WALLET).orElseThrow().balance();
         }
 
-        protected Payment ledgerOf(String paymentNo) {
-            return ledgerStore.findByPaymentNo(paymentNo).orElseThrow();
+        protected Payment ledgerOf(String merchantPaymentNo) {
+            return ledgerStore.findByMerchantPaymentNo(merchantPaymentNo).orElseThrow();
         }
     }
 
@@ -155,7 +155,7 @@ class ChaosPaymentIT {
             mockMvc.perform(post("/api/v1/payments")
                     .contentType(MediaType.APPLICATION_JSON).content(body("CHAOS-F-002")));
 
-            assertThat(ledgerStore.findByPaymentNo("CHAOS-F-002")).isPresent();
+            assertThat(ledgerStore.findByMerchantPaymentNo("CHAOS-F-002")).isPresent();
         }
 
         @Test

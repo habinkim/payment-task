@@ -55,12 +55,12 @@ class PaymentServiceTest {
         service = new PaymentService(transaction, gateway, metrics, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
-    private PaymentCommand command(String paymentNo, String amount) {
-        return new PaymentCommand(paymentNo, WALLET_ID, new BigDecimal(amount), "USD");
+    private PaymentCommand command(String merchantPaymentNo, String amount) {
+        return new PaymentCommand(merchantPaymentNo, WALLET_ID, new BigDecimal(amount), "USD");
     }
 
-    private Payment pending(String paymentNo, String amount) {
-        return new Payment(paymentNo, WALLET_ID, new BigDecimal(amount), "USD");
+    private Payment pending(String merchantPaymentNo, String amount) {
+        return new Payment(merchantPaymentNo, WALLET_ID, new BigDecimal(amount), "USD");
     }
 
     private void givenWallet(String balance) {

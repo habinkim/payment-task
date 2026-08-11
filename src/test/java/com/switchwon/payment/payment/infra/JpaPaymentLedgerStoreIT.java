@@ -27,8 +27,8 @@ class JpaPaymentLedgerStoreIT {
     @Autowired
     private EntityManager em;
 
-    private Payment newPayment(String paymentNo) {
-        return new Payment(paymentNo, 1L, new BigDecimal("100.0000"), "USD");
+    private Payment newPayment(String merchantPaymentNo) {
+        return new Payment(merchantPaymentNo, 1L, new BigDecimal("100.0000"), "USD");
     }
 
     @Test
@@ -38,9 +38,9 @@ class JpaPaymentLedgerStoreIT {
         em.flush();
         em.clear();
 
-        Payment found = store.findByPaymentNo("PAY-001").orElseThrow();
+        Payment found = store.findByMerchantPaymentNo("PAY-001").orElseThrow();
 
-        assertThat(found.paymentNo()).isEqualTo("PAY-001");
+        assertThat(found.merchantPaymentNo()).isEqualTo("PAY-001");
         assertThat(found.status()).isEqualTo(PaymentStatus.PENDING);
         assertThat(found.amount()).isEqualByComparingTo("100.0000");
         assertThat(found.currency()).isEqualTo("USD");
@@ -48,7 +48,7 @@ class JpaPaymentLedgerStoreIT {
 
     @Test
     @DisplayName("같은 결제번호를 두 번 저장하면 유일 제약에 걸린다")
-    void rejectsDuplicatePaymentNo() {
+    void rejectsDuplicateMerchantPaymentNo() {
         store.append(newPayment("PAY-DUP"));
         em.flush();
 
@@ -70,7 +70,7 @@ class JpaPaymentLedgerStoreIT {
         em.flush();
         em.clear();
 
-        Payment found = store.findByPaymentNo("PAY-002").orElseThrow();
+        Payment found = store.findByMerchantPaymentNo("PAY-002").orElseThrow();
         assertThat(found.status()).isEqualTo(PaymentStatus.COMPLETED);
         assertThat(found.externalTransactionId()).isEqualTo("TXN-1");
     }
@@ -87,7 +87,7 @@ class JpaPaymentLedgerStoreIT {
         em.flush();
         em.clear();
 
-        Payment found = store.findByPaymentNo("PAY-003").orElseThrow();
+        Payment found = store.findByMerchantPaymentNo("PAY-003").orElseThrow();
         assertThat(found.status()).isEqualTo(PaymentStatus.FAILED);
         assertThat(found.failureReason()).isEqualTo(FailureReason.SYSTEM_ERROR);
         assertThat(found.retriable()).isTrue();
@@ -104,7 +104,7 @@ class JpaPaymentLedgerStoreIT {
         em.flush();
         em.clear();
 
-        Payment restored = store.findByPaymentNo("PAY-004").orElseThrow();
+        Payment restored = store.findByMerchantPaymentNo("PAY-004").orElseThrow();
         assertThat(restored.status()).isEqualTo(PaymentStatus.UNKNOWN);
 
         restored.complete("TXN-9", "0000", Instant.parse("2026-08-11T00:01:00Z"));
@@ -114,6 +114,6 @@ class JpaPaymentLedgerStoreIT {
     @Test
     @DisplayName("없는 결제번호를 조회하면 비어 있다")
     void findMissingReturnsEmpty() {
-        assertThat(store.findByPaymentNo("NOPE")).isEmpty();
+        assertThat(store.findByMerchantPaymentNo("NOPE")).isEmpty();
     }
 }
