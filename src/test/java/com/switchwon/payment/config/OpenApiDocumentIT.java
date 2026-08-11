@@ -51,6 +51,23 @@ class OpenApiDocumentIT {
     }
 
     @Test
+    @DisplayName("조회 엔드포인트가 문서에 포함된다")
+    void queryEndpointsAreDocumented() throws Exception {
+        mockMvc.perform(get(DOC))
+                .andExpect(jsonPath("$.paths['/api/v1/payments'].get.summary").value("결제 목록 조회"))
+                .andExpect(jsonPath("$.paths['/api/v1/payments/{paymentNo}'].get.summary").value("결제 단건 조회"))
+                .andExpect(jsonPath("$.paths['/api/v1/wallets/{walletId}'].get.summary").value("지갑 조회"));
+    }
+
+    @Test
+    @DisplayName("목록 조회 필터가 문서에 노출된다")
+    void listFiltersAreDocumented() throws Exception {
+        mockMvc.perform(get(DOC))
+                .andExpect(jsonPath("$.paths['/api/v1/payments'].get.parameters[*].name")
+                        .value(org.hamcrest.Matchers.hasItems("status", "walletId", "from", "to", "page", "size")));
+    }
+
+    @Test
     @DisplayName("응답 코드가 상태별로 문서화된다")
     void responseCodesAreDocumented() throws Exception {
         mockMvc.perform(get(DOC))

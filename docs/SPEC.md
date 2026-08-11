@@ -21,7 +21,7 @@
 | S4 | 게이트웨이 연동 (`Mock`, `Http`) | ◐ |
 | S5 | 결제 처리 서비스 | ☑ |
 | S6 | 지갑 충전과 차감 | ☐ |
-| S7 | 조회 API (단건, 목록) | ☐ |
+| S7 | 조회 API (단건, 목록) | ☑ |
 | S8 | 정합성 확인 (`UNKNOWN` 확정) | ☐ |
 | S9 | 아키텍처 테스트와 시나리오 검증 | ☐ |
 | S10 | README와 `.http` 파일 | ☐ |
@@ -243,7 +243,7 @@ POST /api/v1/payments
 
 멱등 재요청은 새로 처리하지 않고 저장된 결과를 반환한다. 최초 요청이 아직 처리 중이면 `DUPLICATE_PAYMENT_NO`(409)를 준다.
 
-### 5.2 결제 단건 조회 ☐
+### 5.2 결제 단건 조회 ☑
 
 ```
 GET /api/v1/payments/{paymentNo}
@@ -268,7 +268,7 @@ GET /api/v1/payments/{paymentNo}
 
 없으면 `PAYMENT_NOT_FOUND`(404).
 
-### 5.3 지갑 조회 ☐
+### 5.3 지갑 조회 ☑
 
 ```
 GET /api/v1/wallets/{walletId}
@@ -276,7 +276,7 @@ GET /api/v1/wallets/{walletId}
 
 `walletId`, `currency`, `balance`, `updatedAt`을 반환한다. 없으면 `WALLET_NOT_FOUND`(404).
 
-### 5.4 결제 목록 조회 ☐
+### 5.4 결제 목록 조회 ☑
 
 ```
 GET /api/v1/payments?status=&walletId=&from=&to=&page=0&size=20
@@ -507,6 +507,7 @@ Mock은 결과를 만들고 WireMock은 설정을 검증한다. #6~#8은 HTTP �
 | 날짜 | 내용 |
 |---|---|
 | 2026-08-11 | 최초 작성. 명세 요구사항 추적표 도입, 지갑 충전(§5.6) 누락 발견하여 추가 |
+| 2026-08-11 | S7 조회 API 완료. 단건·지갑·목록 조회를 추가하고 `Payment` 도메인에 `createdAt`을 더해 정렬 기준을 응답에 노출. 조회는 결제 상태와 무관하게 200을 반환한다 |
 | 2026-08-11 | 로깅을 프로파일별로 분리. `<root>`가 `springProfile` 안에만 있어 프로파일 없이 실행하면 로그가 전혀 출력되지 않던 문제를 수정 |
 | 2026-08-11 | API 문서 UI를 Swagger UI에서 Scalar로 교체. OpenAPI 애노테이션으로 시나리오 접두어와 시드 지갑을 문서에 담아 평가자가 문서에서 바로 눌러볼 수 있게 함. 텔레메트리는 끔 |
 | 2026-08-11 | S5 결제 처리 서비스 완료. 트랜잭션 경계를 오케스트레이터와 전용 서비스로 분리(ADR 0001). `GatewayResult`를 재시도 가능 여부로 세분화. 동시성 테스트에서 `WalletStore` 쓰기 메서드에 트랜잭션이 없어 트랜잭션 밖 호출이 실패하는 결함을 발견해 수정 |
