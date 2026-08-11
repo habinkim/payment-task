@@ -171,6 +171,30 @@ class ArchitectureTest {
                     .should().haveRawReturnType(org.springframework.data.domain.Page.class)
                     .check(classesUnderTest);
         }
+
+        @Test
+        @DisplayName("인프라는 서비스를 알지 못한다")
+        void infraDoesNotDependOnService() {
+            noClasses().that().resideInAPackage("..infra..")
+                    .should().dependOnClassesThat().resideInAPackage("..service..")
+                    .check(classesUnderTest);
+        }
+
+        @Test
+        @DisplayName("스프링 데이터 타입은 인프라 밖으로 나가지 않는다")
+        void springDataStaysInInfra() {
+            noClasses().that().resideOutsideOfPackage("..infra..")
+                    .should().dependOnClassesThat().resideInAPackage("org.springframework.data.domain..")
+                    .check(classesUnderTest);
+        }
+
+        @Test
+        @DisplayName("서비스는 저장소 구현이 아니라 인터페이스에 의존한다")
+        void serviceDependsOnStoreInterface() {
+            noClasses().that().resideInAPackage("..service..")
+                    .should().dependOnClassesThat().haveSimpleNameStartingWith("Jpa")
+                    .check(classesUnderTest);
+        }
     }
 
     @Nested
