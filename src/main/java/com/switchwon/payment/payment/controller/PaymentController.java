@@ -10,7 +10,7 @@ import com.switchwon.payment.payment.domain.FailureReason;
 import com.switchwon.payment.payment.domain.Payment;
 import com.switchwon.payment.payment.domain.PaymentStatus;
 import com.switchwon.payment.payment.service.PaymentQueryService;
-import com.switchwon.payment.payment.service.PaymentSearchCondition;
+import com.switchwon.payment.payment.domain.PaymentSearchCondition;
 import com.switchwon.payment.payment.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

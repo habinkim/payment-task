@@ -5,6 +5,7 @@ import com.switchwon.payment.common.page.PageQuery;
 import com.switchwon.payment.common.page.PageResult;
 import com.switchwon.payment.error.ApiException;
 import com.switchwon.payment.payment.domain.Payment;
+import com.switchwon.payment.payment.domain.PaymentSearchCondition;
 import com.switchwon.payment.payment.infra.PaymentLedgerStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
