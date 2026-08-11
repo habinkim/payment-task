@@ -19,8 +19,12 @@ public record GatewayApproval(
         return new GatewayApproval(GatewayResult.DECLINED, null, externalResponseCode);
     }
 
-    public static GatewayApproval failed(String externalResponseCode) {
-        return new GatewayApproval(GatewayResult.FAILED, null, externalResponseCode);
+    public static GatewayApproval failedRetriable(String externalResponseCode) {
+        return new GatewayApproval(GatewayResult.FAILED_RETRIABLE, null, externalResponseCode);
+    }
+
+    public static GatewayApproval failedPermanent(String externalResponseCode) {
+        return new GatewayApproval(GatewayResult.FAILED_PERMANENT, null, externalResponseCode);
     }
 
     public static GatewayApproval inDoubt(String externalResponseCode) {

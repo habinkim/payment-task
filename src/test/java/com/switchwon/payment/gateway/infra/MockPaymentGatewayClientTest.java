@@ -48,20 +48,20 @@ class MockPaymentGatewayClientTest {
     }
 
     @Test
-    @DisplayName("서버 오류는 실패로 응답한다")
-    void serverErrorFails() {
+    @DisplayName("서버 오류는 재시도 가능한 실패로 응답한다")
+    void serverErrorIsRetriable() {
         GatewayApproval approval = approve("ERR500-001");
 
-        assertThat(approval.result()).isEqualTo(GatewayResult.FAILED);
+        assertThat(approval.result()).isEqualTo(GatewayResult.FAILED_RETRIABLE);
         assertThat(approval.externalResponseCode()).isEqualTo("500");
     }
 
     @Test
-    @DisplayName("잘못된 요청은 실패로 응답한다")
-    void badRequestFails() {
+    @DisplayName("잘못된 요청은 재시도 불가한 실패로 응답한다")
+    void badRequestIsPermanent() {
         GatewayApproval approval = approve("ERR400-001");
 
-        assertThat(approval.result()).isEqualTo(GatewayResult.FAILED);
+        assertThat(approval.result()).isEqualTo(GatewayResult.FAILED_PERMANENT);
         assertThat(approval.externalResponseCode()).isEqualTo("400");
     }
 
