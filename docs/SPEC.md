@@ -385,6 +385,7 @@ UPDATE wallet
 | 항목 | 내용 |
 |---|---|
 | 상관관계 ID | `X-Request-Id`를 MDC에 넣고 응답 헤더로 반환 |
+| 로그 출력 | `dev`는 콘솔과 SQL 디버그, `prod`는 콘솔과 파일(비동기 롤링). 기본 프로파일은 `dev` |
 | 결제 결과 카운터 | `payment.result{status, reason}` |
 | 승인 후 차감 실패 카운터 | `payment.orphan.total` — 미아 거래 후보 |
 | 게이트웨이 호출 시간 | `gateway.approve.duration` |
@@ -486,7 +487,7 @@ Mock은 결과를 만들고 WireMock은 설정을 검증한다. #6~#8은 HTTP �
 | `docs/adr/` — 설계 판단 7건 | ☑ |
 | `docs/requirement/` — 과제 원문 | ☑ |
 | `http/*.http` — 정상 경로와 오류 시나리오 전부 | ☐ |
-| Swagger UI | ☑ (springdoc 설정 완료) |
+| API 문서 UI (Scalar) | ☑ `/scalar` |
 
 ---
 
@@ -506,6 +507,8 @@ Mock은 결과를 만들고 WireMock은 설정을 검증한다. #6~#8은 HTTP �
 | 날짜 | 내용 |
 |---|---|
 | 2026-08-11 | 최초 작성. 명세 요구사항 추적표 도입, 지갑 충전(§5.6) 누락 발견하여 추가 |
+| 2026-08-11 | 로깅을 프로파일별로 분리. `<root>`가 `springProfile` 안에만 있어 프로파일 없이 실행하면 로그가 전혀 출력되지 않던 문제를 수정 |
+| 2026-08-11 | API 문서 UI를 Swagger UI에서 Scalar로 교체. OpenAPI 애노테이션으로 시나리오 접두어와 시드 지갑을 문서에 담아 평가자가 문서에서 바로 눌러볼 수 있게 함. 텔레메트리는 끔 |
 | 2026-08-11 | S5 결제 처리 서비스 완료. 트랜잭션 경계를 오케스트레이터와 전용 서비스로 분리(ADR 0001). `GatewayResult`를 재시도 가능 여부로 세분화. 동시성 테스트에서 `WalletStore` 쓰기 메서드에 트랜잭션이 없어 트랜잭션 밖 호출이 실패하는 결함을 발견해 수정 |
 | 2026-08-11 | S4 모의 게이트웨이 완료. 전환 수단을 스프링 프로파일에서 `payment.gateway.mode` 설정 키로 변경. 로깅 설정을 추가하고 `-PshowSql` 로 테스트에서 SQL을 볼 수 있게 함 |
 | 2026-08-11 | S3 영속 계층 완료. 도메인과 JPA 엔티티를 분리하고(ADR 0008) 잔액 증감을 조건부 UPDATE로 처리. `currency`를 `CHAR`에서 `VARCHAR`로 교정 — `CHAR`는 짧은 값에 공백을 채워 비교가 어긋난다 |

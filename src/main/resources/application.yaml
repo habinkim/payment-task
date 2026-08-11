@@ -2,9 +2,10 @@ spring:
   application:
     name: switchwon-payment
 
+  profiles:
+    default: dev
+
   datasource:
-    # 별도 DB가 제공되지 않으므로 In-Memory H2를 쓴다(과제 명세 Tech Stack).
-    # DB_CLOSE_DELAY=-1 로 마지막 커넥션이 닫혀도 스키마가 유지된다.
     url: jdbc:h2:mem:switchwon;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
@@ -20,8 +21,6 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
-        format_sql: true
-        highlight_sql: true
 
   flyway:
     enabled: true
@@ -54,16 +53,15 @@ management:
 
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
+    enabled: false
+  api-docs:
+    path: /v3/api-docs
+  paths-to-match: /api/**
 
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-
----
-spring:
-  config:
-    activate:
-      on-profile: prod
+scalar:
+  enabled: true
+  url: /v3/api-docs
+  path: /scalar
+  page-title: 스위치원 결제 API
+  dark-mode: true
+  telemetry: false
