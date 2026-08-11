@@ -12,6 +12,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -124,6 +126,62 @@ class PaymentQueryApiIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.returnObject.content[*].walletId")
                         .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(POOR_WALLET.intValue()))));
+    }
+
+    @Test
+    @DisplayName("생성 시각이 시작 기준보다 이른 건은 제외된다")
+    void excludesPaymentsBeforeFrom() throws Exception {
+        pay("QRY-FROM-001", RICH_WALLET, "10");
+        Instant future = Instant.now().plus(1, ChronoUnit.HOURS);
+
+        mockMvc.perform(get("/api/v1/payments").param("from", future.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                        .value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("QRY-FROM-001"))));
+    }
+
+    @Test
+    @DisplayName("생성 시각이 종료 기준보다 늦은 건은 제외된다")
+    void excludesPaymentsAfterTo() throws Exception {
+        pay("QRY-TO-001", RICH_WALLET, "10");
+        Instant past = Instant.now().minus(1, ChronoUnit.HOURS);
+
+        mockMvc.perform(get("/api/v1/payments").param("to", past.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                        .value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("QRY-TO-001"))));
+    }
+
+    @Test
+    @DisplayName("기간 안에 있는 건은 조회된다")
+    void includesPaymentsWithinRange() throws Exception {
+        Instant from = Instant.now().minus(1, ChronoUnit.HOURS);
+        pay("QRY-RANGE-001", RICH_WALLET, "10");
+        Instant to = Instant.now().plus(1, ChronoUnit.HOURS);
+
+        mockMvc.perform(get("/api/v1/payments")
+                        .param("from", from.toString())
+                        .param("to", to.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                        .value(org.hamcrest.Matchers.hasItem("QRY-RANGE-001")));
+    }
+
+    @Test
+    @DisplayName("상태와 기간을 함께 걸러 조회한다")
+    void filtersByStatusAndRange() throws Exception {
+        Instant from = Instant.now().minus(1, ChronoUnit.HOURS);
+        pay("QRY-MIX-001", RICH_WALLET, "10");
+        pay("DECLINE-QRY-MIX-002", RICH_WALLET, "10");
+
+        mockMvc.perform(get("/api/v1/payments")
+                        .param("status", "FAILED")
+                        .param("from", from.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                        .value(org.hamcrest.Matchers.hasItem("DECLINE-QRY-MIX-002")))
+                .andExpect(jsonPath("$.returnObject.content[*].paymentNo")
+                        .value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("QRY-MIX-001"))));
     }
 
     @Test
