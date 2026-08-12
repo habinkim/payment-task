@@ -535,6 +535,7 @@ HTTP 타임아웃 설정(`connect-timeout`, `read-timeout`)은 향할 대상이 
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-08-12 | 결제 상태 전이를 조건부 UPDATE로 전환(ADR 0012). 수평 확장 검토 중 이중 차감을 재현했고, `WHERE status not in (COMPLETED, FAILED)` 조건으로 확정이 한 번만 반영되도록 함. 경합 패배 시 `PAYMENT_ALREADY_SETTLED`(409) |
 | 2026-08-12 | 역할을 드러내는 이름으로 정정(ADR 0011). 우리가 PG이므로 외부 연동 타입을 `Gateway*` → `External*`, 패키지·설정 키를 `gateway` → `external`로 옮기고, 3rd party가 발급하는 결제번호를 `paymentNo` → `merchantPaymentNo`로 변경. API 요청·응답 키와 DB 컬럼 포함 |
 | 2026-08-12 | S6 지갑 충전 완료. `POST /api/v1/wallets/{walletId}/charge` 추가하고 이력을 `wallet_charge`(V3)에 별도 저장. `chargeNo` UNIQUE로 멱등을 보장하며 중복 요청은 409가 아니라 200과 최초 이력을 반환 |
 | 2026-08-11 | 저장소를 도메인 인터페이스와 인프라 구현으로 분리(ADR 0010). 인프라가 서비스를 역참조하던 순환을 제거하고, 페이징을 `PageQuery`·`PageResult` 도메인 타입으로 바꿔 스프링 데이터를 인프라 안으로 가둠. 의존 방향을 강제하는 아키텍처 규칙 4종 추가 |
