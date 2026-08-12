@@ -53,7 +53,9 @@ public class PaymentTransactionService {
     @Transactional
     public Payment rejectWithoutGateway(Payment payment, FailureReason reason) {
         payment.fail(reason, false, null, Instant.now(clock));
-        ledgerStore.updateState(payment);
+        if (!ledgerStore.updateState(payment)) {
+            throw new ApiException(ResponseCode.PAYMENT_ALREADY_SETTLED);
+        }
         metrics.recordResult(payment);
         return payment;
     }
@@ -70,7 +72,9 @@ public class PaymentTransactionService {
             case IN_DOUBT -> payment.markUnknown(approval.externalResponseCode(), now);
         }
 
-        ledgerStore.updateState(payment);
+        if (!ledgerStore.updateState(payment)) {
+            throw new ApiException(ResponseCode.PAYMENT_ALREADY_SETTLED);
+        }
         metrics.recordResult(payment);
         return payment;
     }
@@ -95,7 +99,9 @@ public class PaymentTransactionService {
             case STILL_UNKNOWN -> throw new IllegalStateException("위에서 걸러졌어야 합니다");
         }
 
-        ledgerStore.updateState(payment);
+        if (!ledgerStore.updateState(payment)) {
+            throw new ApiException(ResponseCode.PAYMENT_ALREADY_SETTLED);
+        }
         metrics.recordResult(payment);
         metrics.recordReconcile(payment.status().name());
         return payment;

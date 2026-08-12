@@ -11,6 +11,7 @@ public enum ResponseCode {
     PAYMENT_IN_DOUBT(HttpStatus.ACCEPTED, "결제 결과를 확인하는 중입니다. 잠시 후 조회해 주세요."),
 
     DUPLICATE_PAYMENT_NO(HttpStatus.CONFLICT, "이미 처리 중인 결제번호입니다."),
+    PAYMENT_ALREADY_SETTLED(HttpStatus.CONFLICT, "이미 확정된 결제입니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 결제입니다."),
     WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 지갑입니다."),
 
