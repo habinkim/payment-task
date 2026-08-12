@@ -1,0 +1,80 @@
+### 결제 요청과 조회
+# 실행 전: ./gradlew bootRun
+
+@host = http://localhost:18080
+
+### 정상 결제 — 200 COMPLETED, 지갑 1의 잔액이 100 줄어든다
+POST {{host}}/api/v1/payments
+Content-Type: application/json
+
+{
+  "merchantPaymentNo": "PAY-{{$timestamp}}",
+  "walletId": 1,
+  "amount": 100.0000,
+  "currency": "USD"
+}
+
+### 결제 단건 조회 — 200. 위에서 만든 번호로 바꿔서 실행한다
+# 서버 PK가 아니라 가맹점이 발급한 번호로 조회한다.
+# 응답을 받지 못한 가맹점도 자기 번호는 알고 있으므로 호출할 수 있다.
+GET {{host}}/api/v1/payments/PAY-001
+
+### 없는 결제번호 조회 — 404 PAYMENT_NOT_FOUND
+GET {{host}}/api/v1/payments/NOPE-999
+
+### 결제 목록 — 200. 생성 시각 내림차순, 기본 20건
+GET {{host}}/api/v1/payments
+
+### 목록 — 상태로 거르기
+GET {{host}}/api/v1/payments?status=COMPLETED
+
+### 목록 — 결과 미상 건만 (정합성 확인 대상)
+GET {{host}}/api/v1/payments?status=UNKNOWN
+
+### 목록 — 지갑으로 거르기
+GET {{host}}/api/v1/payments?walletId=1
+
+### 목록 — 기간으로 거르기
+GET {{host}}/api/v1/payments?from=2026-01-01T00:00:00Z&to=2030-12-31T23:59:59Z
+
+### 목록 — 상태와 기간을 함께
+GET {{host}}/api/v1/payments?status=FAILED&from=2026-01-01T00:00:00Z
+
+### 목록 — 페이지 크기는 100을 넘지 못한다. size=500을 보내도 응답의 size는 100
+GET {{host}}/api/v1/payments?size=500
+
+### 목록 — size가 0 이하면 400 INVALID_REQUEST
+GET {{host}}/api/v1/payments?size=0
+
+### 검증 실패 — 400 INVALID_REQUEST. 결제번호에 밑줄은 쓸 수 없다
+POST {{host}}/api/v1/payments
+Content-Type: application/json
+
+{
+  "merchantPaymentNo": "PAY_001",
+  "walletId": 1,
+  "amount": 100.0000,
+  "currency": "USD"
+}
+
+### 검증 실패 — 400. 금액은 0보다 커야 한다
+POST {{host}}/api/v1/payments
+Content-Type: application/json
+
+{
+  "merchantPaymentNo": "PAY-ZERO-{{$timestamp}}",
+  "walletId": 1,
+  "amount": 0,
+  "currency": "USD"
+}
+
+### 없는 지갑 — 404 WALLET_NOT_FOUND
+POST {{host}}/api/v1/payments
+Content-Type: application/json
+
+{
+  "merchantPaymentNo": "PAY-NOWALLET-{{$timestamp}}",
+  "walletId": 9999,
+  "amount": 100.0000,
+  "currency": "USD"
+}
