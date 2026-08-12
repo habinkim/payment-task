@@ -23,8 +23,8 @@
 | S6 | 지갑 충전과 차감 | ☑ |
 | S7 | 조회 API (단건, 목록) | ☑ |
 | S8 | 정합성 확인 (`UNKNOWN` 확정) | ☑ |
-| S9 | 아키텍처 테스트와 시나리오 검증 | ☐ |
-| S10 | README와 `.http` 파일 | ☐ |
+| S9 | 아키텍처 테스트와 시나리오 검증 | ☑ |
+| S10 | README와 `.http` 파일 | ☑ |
 
 ---
 
@@ -512,10 +512,10 @@ HTTP 타임아웃 설정(`connect-timeout`, `read-timeout`)은 향할 대상이 
 
 | 항목 | 상태 |
 |---|---|
-| `README.md` — 실행 방법, API 목록, 설계 요약 | ☐ |
-| `docs/adr/` — 설계 판단 7건 | ☑ |
+| `README.md` — 실행 방법, API 목록, 설계 요약, 흐름 다이어그램 | ☑ |
+| `docs/adr/` — 설계 판단 12건 | ☑ |
 | `docs/requirement/` — 과제 원문 | ☑ |
-| `http/*.http` — 정상 경로와 오류 시나리오 전부 | ☐ |
+| `http/*.http` — 결제·지갑·운영·시나리오 4종 | ☑ |
 | API 문서 UI (Scalar) | ☑ `/scalar` |
 
 ---
@@ -551,6 +551,7 @@ HTTP 타임아웃 설정(`connect-timeout`, `read-timeout`)은 향할 대상이 
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-08-12 | S10 완료. README에 문제 정의·정책·흐름(Mermaid 3종)·실행 방법·확장 고려사항을 담고, `http/` 에 시나리오별 요청 예시 4종 추가. `SLOW-` 접두어 설명이 구현과 달라 정정 |
 | 2026-08-12 | 결제 상태 전이를 조건부 UPDATE로 전환(ADR 0012). 수평 확장 검토 중 이중 차감을 재현했고, `WHERE status not in (COMPLETED, FAILED)` 조건으로 확정이 한 번만 반영되도록 함. 경합 패배 시 `PAYMENT_ALREADY_SETTLED`(409) |
 | 2026-08-12 | 역할을 드러내는 이름으로 정정(ADR 0011). 우리가 PG이므로 외부 연동 타입을 `Gateway*` → `External*`, 패키지·설정 키를 `gateway` → `external`로 옮기고, 3rd party가 발급하는 결제번호를 `paymentNo` → `merchantPaymentNo`로 변경. API 요청·응답 키와 DB 컬럼 포함 |
 | 2026-08-12 | S6 지갑 충전 완료. `POST /api/v1/wallets/{walletId}/charge` 추가하고 이력을 `wallet_charge`(V3)에 별도 저장. `chargeNo` UNIQUE로 멱등을 보장하며 중복 요청은 409가 아니라 200과 최초 이력을 반환 |

@@ -1,0 +1,62 @@
+### 정합성 확인 (운영)
+# 결과 미상으로 남은 결제를 외부 결제사에 되물어 확정한다.
+#
+# 기본 프로파일(dev)에서는 스케줄러가 꺼져 있으므로 여기서 직접 호출한다.
+# prod 프로파일에서는 60초마다 자동으로 돈다.
+
+@host = http://localhost:18080
+
+### 1단계 — 타임아웃 결제를 만든다. 202, 잔액은 차감되지 않는다
+POST {{host}}/api/v1/payments
+Content-Type: application/json
+
+{
+  "merchantPaymentNo": "TIMEOUT-RECONCILE-001",
+  "walletId": 1,
+  "amount": 10.0000,
+  "currency": "USD"
+}
+
+### 2단계 — 잔액 확인. 아직 줄지 않았다
+GET {{host}}/api/v1/wallets/1
+
+### 3단계 — 결과 미상 목록에 잡히는지 확인
+GET {{host}}/api/v1/payments?status=UNKNOWN
+
+### 4단계 — 확정. 게이트웨이가 승인으로 답하고, 이때 비로소 차감된다
+# TIMEOUT- 접두어는 조회 시 승인으로 수렴한다.
+POST {{host}}/api/v1/admin/payments/TIMEOUT-RECONCILE-001/reconcile
+
+### 5단계 — 잔액 확인. 10 줄어 있다
+GET {{host}}/api/v1/wallets/1
+
+### 6단계 — 같은 건을 다시 확정. 200이지만 잔액은 변하지 않는다
+# 이미 COMPLETED라 조기 반환한다. 이중 차감이 일어나지 않는 지점이다.
+POST {{host}}/api/v1/admin/payments/TIMEOUT-RECONCILE-001/reconcile
+
+### 확정해도 결과 미상으로 남는 경우 — ERR500- 은 조회에도 답을 주지 못한다
+POST {{host}}/api/v1/payments
+Content-Type: application/json
+
+{
+  "merchantPaymentNo": "ERR500-STAYS-UNKNOWN-001",
+  "walletId": 1,
+  "amount": 10.0000,
+  "currency": "USD"
+}
+
+### 위 건은 FAILED(재시도 가능)라 확정 대상이 아니다. 200이며 상태가 그대로다
+POST {{host}}/api/v1/admin/payments/ERR500-STAYS-UNKNOWN-001/reconcile
+
+### 확정 결과가 거절인 경우 — DECLINE- 은 조회 시 거절로 확정된다
+POST {{host}}/api/v1/admin/payments/DECLINE-ANY-001/reconcile
+
+### 없는 결제번호 — 404 PAYMENT_NOT_FOUND
+POST {{host}}/api/v1/admin/payments/NOPE-999/reconcile
+
+### 확정 메트릭 확인
+GET {{host}}/actuator/metrics/payment.reconcile
+
+### 미아 거래 카운터 — 외부 승인 후 차감 실패 건수
+# 발생한 적이 없으면 카운터가 등록되지 않아 404가 나온다. 정상이다.
+GET {{host}}/actuator/metrics/payment.orphan.total
