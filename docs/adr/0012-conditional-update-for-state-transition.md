@@ -4,7 +4,7 @@
 
 ## 맥락
 
-수평 확장을 가정하고 동시성을 검토하다 **이중 차감을 재현했다**([검토 문서](../검토_수평확장과_동시성.md)).
+수평 확장을 가정하고 동시성을 검토하다 **이중 차감을 재현했다.** 이 결정의 유효 범위와 전제는 [ADR 0006](0006-single-server-no-middleware.md)에 함께 정리했다.
 
 두 인스턴스가 같은 `UNKNOWN` 건을 동시에 확정하는 상황을 만들었다.
 
@@ -26,6 +26,8 @@ confirm 성공: COMPLETED
 | **30%** | **차감 2회, 감지 수단 없음** |
 
 잔액이 넉넉할수록 조건이 통과해 아무도 막지 못한다. `ck_wallet_balance_non_negative` CHECK도 발동하지 않는다.
+
+경로는 둘이다. **스케줄러**와 **관리자 API**가 같은 `confirm()`을 지난다. `findOldestUnknown()`은 `created_at ASC` 정렬의 평범한 SELECT라 정렬이 결정적이고, 실측 결과 두 번 호출 시 **3/3 전부 같은 건을 집었다.**
 
 ### 원인 — 설계의 비대칭
 
@@ -113,7 +115,15 @@ SQL:             and p.status not in (COMPLETED, FAILED)
 
 **락도 미들웨어도 도입하지 않았다.** Kleppmann의 [분산 락 분석](https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html)이 방향을 정해줬다.
 
+그는 **효율성 락**과 **정확성 락**을 가른다. 효율성 락은 실패해도 중복 작업 정도지만, 정확성 락은 실패하면 데이터 손실이다. 그리고 락은 사실 lease라, GC pause·페이지 폴트·네트워크 지연으로 클라이언트가 만료를 알아채지 못하면 안전하지 않은 쓰기를 한다. GitHub은 약 90초 패킷 지연을 겪은 적이 있다.
+
+> You simply cannot make any assumptions about timing.
+
+제대로 하려면 **fencing token**이 필요하고, 이는 리소스 쪽이 토큰을 검사해 거부해야 성립한다. Redlock에는 그 기능이 없다. 결론은 명확하다.
+
 > 정확성이면 합의 시스템이나 최소한 제대로 된 트랜잭션 보장을 가진 DB를 쓰라.
+
+이중 차감은 정확성 문제이므로 **락이 아니라 DB 제약으로 풀었다.**
 
 이제 결제 경로 전체가 같은 원리로 직렬화된다.
 
@@ -141,7 +151,7 @@ SQL:             and p.status not in (COMPLETED, FAILED)
 
 - **비관적 락 (`SELECT ... FOR UPDATE`).** `findOldestUnknown`에 락을 걸면 배치가 락을 오래 잡아 다른 요청을 막는다. CAS는 같은 목적을 락 없이 달성한다.
 
-- **ShedLock으로 스케줄러 단일화.** 스케줄러 중복은 막지만 **관리자 API를 통한 동시 확정은 막지 못한다.** Kleppmann의 구분으로는 효율성 락이지 정확성 해법이 아니다. CAS 이후 별도로 판단한다.
+- **ShedLock으로 스케줄러 단일화.** 잡 실행 직전 공유 저장소에 락 레코드를 쓰고 성공한 인스턴스만 실행한다. 기존 `@Scheduled`를 그대로 두므로 도입 비용이 가장 낮다([The New Stack](https://thenewstack.io/rethinking-java-scheduled-tasks-in-kubernetes/)). 그러나 **관리자 API를 통한 동시 확정은 막지 못한다.** Kleppmann의 구분으로는 효율성 락이지 정확성 해법이 아니다. CAS 이후 별도로 판단하며, 도입 시 `lockAtMostFor`를 실제 작업 시간보다 길게 잡는 것이 핵심이다(짧으면 느린 잡이 중복 실행된다).
 
 - **차감과 상태 전이의 순서 뒤집기.** 상태를 먼저 확정하면 진 쪽이 차감을 시도조차 안 한다. 그러나 `settleApproved()`가 "차감 성공 여부로 `complete`/`fail`을 가르는" 구조라 로직이 복잡해진다. 롤백이 차감을 되돌리므로 정확성은 이미 확보된다.
 

@@ -58,6 +58,48 @@ DB는 선택이 아니라 명세가 정했다. "지원자에게 별도 DB가 제
 
 **서버를 늘리는 순간 잔액 동시성 방식을 재검토해야 한다.** 조건부 UPDATE는 단일 DB를 전제하므로 DB가 하나인 한 다중 인스턴스에서도 동작한다. DB를 샤딩하는 시점에는 이야기가 달라진다. 그 지점을 트리거 표에 남겨둔다.
 
+## 전제가 깨지는 지점 (2026-08-12 검토 추가)
+
+수평 확장을 가정하고 이 결정의 유효 범위를 확인했다. 실측한 것과 구조 분석으로 판정한 것을 구분해 적는다.
+
+### 이 시스템의 정합성은 셋에 걸려 있다
+
+| 보장 | 수단 |
+|---|---|
+| 멱등성 | `uk_merchant_payment_no` UNIQUE |
+| 원자적 차감 | `UPDATE ... WHERE balance >= :amount` |
+| 상태 전이 | `UPDATE ... WHERE status not in (terminal)` ([ADR 0012](0012-conditional-update-for-state-transition.md)) |
+
+**셋 다 "한 대의 DB가 전역을 안다"는 가정 위에 있다.** JVM 락(`synchronized`, `ReentrantLock`)은 프로덕션 코드에 0건이라 "단일 서버에선 되는데 늘리면 조용히 깨지는" 함정은 피했지만, 분산 락으로 대체된 것도 아니므로 위 셋이 무너지면 보호가 없다.
+
+### WAS만 늘릴 때 — 동작한다
+
+DB가 한 대인 한 위 셋이 그대로 성립한다. 다만 **스케줄러가 인스턴스 수만큼 중복 실행된다.** `findOldestUnknown()`은 `created_at ASC` 정렬의 평범한 SELECT라 정렬이 결정적이고, 실측 결과 두 번 호출 시 **3/3 전부 같은 건을 집었다.** `application-prod.yaml`이 `payment.reconcile.enabled: true`를 박아두므로 prod로 N대를 띄우면 N개 스케줄러가 같은 배치를 돈다.
+
+정합성은 ADR 0012의 조건부 UPDATE가 지킨다. 남는 것은 **게이트웨이 호출 낭비**이며, 그건 효율성 문제라 ShedLock 같은 수단으로 별도 판단한다.
+
+### DB를 늘릴 때 — 전제가 무너진다
+
+**읽기 복제.** `readOnly = true` 트랜잭션이 코드에 7곳 있다. Replica로 라우팅되면 복제 지연 때문에 `findOldestUnknown()`이 **이미 확정된 건을 UNKNOWN으로 착각**한다. ADR 0012의 CAS가 최종 방어를 하므로 정합성은 지켜지지만 헛일이 늘어난다.
+
+**샤딩.** `uk_merchant_payment_no`가 **샤드별 인덱스**가 된다. 같은 결제번호가 다른 샤드에 들어가면 **멱등이 깨진다** — 지금 멱등 설계 전체가 이 제약 하나에 걸려 있다. `wallet_id`로 샤딩하면 결제의 `payment` INSERT와 `wallet` UPDATE가 크로스 샤드가 되어 분산 트랜잭션(2PC/Saga)이 필요해진다.
+
+두 항목은 H2 인메모리라 **재현하지 못했다.** 구조 분석에 의한 판정이며 실측과 근거 등급이 다르다.
+
+### 선결 과제 — prod도 인메모리다
+
+`datasource` 정의가 `application.yaml` 한 곳뿐이고 `application-prod.yaml`에 오버라이드가 없다. 인메모리 DB는 JVM 프로세스에 종속되므로 **지금 3대를 띄우면 DB가 3개**다. 잔액도 원장도 인스턴스마다 갈라진다.
+
+과제 명세가 H2/SQLite를 요구했으므로 결함은 아니다. 다만 수평 확장 논의가 성립하려면 공유 DB가 선결 조건이다.
+
+### H2와 MySQL의 격리 수준이 다르다
+
+동시성 테스트가 전부 H2 위에서 돈다. **H2는 READ COMMITTED, MySQL InnoDB는 REPEATABLE READ**다.
+
+반직관적인 사실이 하나 있다. InnoDB RR에서 **plain SELECT는 non-locking snapshot read**라 락을 걸지 않으므로, `SELECT` 후 `UPDATE`하는 lost update를 **막지 못한다.** PostgreSQL RR은 first-updater-wins로 막는다. 격리 수준 기본값이 높다고 더 안전한 게 아니다([Percona](https://www.percona.com/blog/what-if-mysqls-repeatable-reads-cause-you-to-lose-money/), [Jepsen: MySQL 8.0.34](https://jepsen.io/analyses/mysql-8.0.34)).
+
+이 때문에 ADR 0012에서 잡은 이중 차감은 MySQL에서 **더 잘 재현된다** — RR 스냅샷 때문에 경쟁 트랜잭션의 커밋을 볼 수 없기 때문이다. 수정 방향은 같지만, **H2에서 통과한 동시성 테스트가 MySQL에서 같다는 보장은 없다.** Testcontainers로 동시성 IT만 MySQL에서 돌리는 것이 다음 단계다.
+
 ## 검토한 대안
 
 - **처음부터 확장 가능한 구성으로 만든다.** 나중에 옮기는 비용을 아낄 수 있다는 논리지만, 필요해지지 않으면 그 비용은 발생하지 않는다. 불확실한 미래를 위해 지금 복잡도를 지불하는 것은 손실이다. 과거 유사 과제에서 규모가 요구하지 않는 미들웨어를 넣어 감점 요인으로 자평한 경험이 있다.

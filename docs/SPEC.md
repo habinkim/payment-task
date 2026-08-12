@@ -531,6 +531,20 @@ HTTP 타임아웃 설정(`connect-timeout`, `read-timeout`)은 향할 대상이 
 
 ---
 
+
+### 수평 확장 관련 (2026-08-12 검토)
+
+[ADR 0006](adr/0006-single-server-no-middleware.md)에 전제와 한계를 정리했다. 아직 손대지 않은 항목만 여기 남긴다.
+
+| # | 항목 | 성격 | 판단 |
+|---|---|---|---|
+| A | `WalletChargeService`의 `DataIntegrityViolationException`을 같은 트랜잭션에서 잡는다 | 트랜잭션이 이미 rollback-only라 커밋 시 `UnexpectedRollbackException`. 금전 정합성은 UNIQUE가 지키나 **멱등 재요청이 200 대신 500**이 된다 | **H2에선 재현되지 않아 수정을 증명할 수 없다.** MySQL 테스트(항목 B)와 묶어야 의미가 있다 |
+| B | 동시성 테스트를 MySQL에서 | H2는 READ COMMITTED, InnoDB는 REPEATABLE READ | Testcontainers 도입. 새 의존성이라 별도 판단 |
+| C | 스케줄러 다중 인스턴스 중복 실행 | 정합성은 [ADR 0012](adr/0012-conditional-update-for-state-transition.md)가 지킨다. 남는 건 게이트웨이 호출 낭비 | ShedLock. **효율성 문제**라 우선순위 낮음 |
+| D | 같은 `merchantPaymentNo`에 다른 `amount`가 오면 기존 건 반환 | Stripe·Toss는 파라미터 불일치 에러를 낸다 | 요청 파라미터 해시 비교. API 계약 변경이라 별도 사이클 |
+| E | 차감에만 원장 테이블이 없다 | 결제 생성·충전에는 원장 + UNIQUE가 있는데 차감은 `wallet.balance` 갱신뿐 | 근본 해법이나 스키마 변경 범위가 크다. ADR 0012의 CAS로 먼저 막았다 |
+| F | `prod` 프로파일도 H2 인메모리 | 다중 인스턴스 시 DB가 인스턴스 수만큼 갈라진다 | 과제 명세가 H2를 요구. README에 단일 인스턴스 전제 명시로 갈음 |
+
 ## 변경 이력
 
 | 날짜 | 내용 |
