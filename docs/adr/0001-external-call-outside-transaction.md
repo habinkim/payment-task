@@ -78,3 +78,25 @@ ledgerStore.updateState(payment)                   // 쓰기 2, DB UPDATE
 "쓰기가 마지막에 몰려 있으니 원자성이 없어도 된다"는 성립하지 않는다. 쓰기 1과 2 사이에서 실패하면 잔액은 빠졌는데 원장은 처리 중으로 남는다. `SettleAtomicityIT`가 그 지점에 예외를 주입해 차감이 롤백되는 것을 확인하며, `@Transactional`을 제거하면 실패한다.
 
 `openPending`의 트랜잭션이 확정과 분리되어 있다는 것도 같은 테스트가 지킨다. 확정이 실패해도 처리 중 원장이 남아야 정합성 확인이 주워갈 수 있다 — 이쪽은 롤백되면 **안 되는** 방향이다.
+
+## 외부 검증 (2026-08-12 추가)
+
+수평 확장 검토 중 이 결정이 업계 표준과 어긋나지 않는지 확인했다.
+
+**TCC(Try-Confirm-Cancel)의 결제 도메인 실체는 승인/매입 분리**다. Try에서 PG authorize, Confirm에서 capture. 내부 트랜잭션 커밋 **후에** capture를 호출하면 orphan 창이 줄어든다. 이 문서의 TX1(PENDING 커밋) → 외부 호출 → TX2(차감+확정) 구조가 같은 형태다.
+
+**Saga의 함정은 격리성 부재**다. 보상하려는 사이에 잔액이 빠져나가면 보상 자체가 불가능해진다. 그래서 차감을 먼저, 지급을 나중에 하는 순서 설계가 필요하다. 이 시스템은 차감만 있고 지급이 없어 해당하지 않는다.
+
+멱등 키 설계의 정본인 [Brandur의 idempotency keys](https://brandur.org/idempotency-keys)는 한 걸음 더 나간다.
+
+> Atomic phases should be safely committed before initiating any foreign state mutation.
+
+외부 호출 하나마다 별도 phase로 쪼개고 각 phase 커밋 시 `recovery_point`를 기록해, 재시도가 완료된 단계를 건너뛰게 한다. 이 프로젝트는 외부 호출이 하나뿐이라 phase가 둘로 충분하고, `PaymentStatus`가 recovery point 역할을 겸한다.
+
+다만 Brandur가 지적한 **UNIQUE의 한계**는 유효하다.
+
+> UNIQUE는 동시 요청 중 하나만 통과시키는 하드 백스톱은 맞다. 그러나 행의 존재 여부만 알려줄 뿐 진행 상태를 모른다.
+
+재시도는 대개 첫 요청이 끝나기 전에 도착한다 — 끝났으면 응답을 받았을 테니 재시도할 이유가 없다. 이 프로젝트는 `resolveDuplicate()`가 non-terminal에 409를 던져 in-flight 시맨틱을 표현하므로 방향이 맞다.
+
+**남은 갭**: 같은 `merchantPaymentNo`에 다른 `amount`가 오면 기존 건을 그대로 반환한다. [Stripe](https://docs.stripe.com/api/idempotent_requests)는 `idempotency_error`를, [Toss Payments](https://docs.tosspayments.com/reference/using-api/idempotency-key)는 파라미터 불일치 에러를 낸다. 요청 파라미터 해시 비교가 없다([SPEC §11](../SPEC.md) 참조).

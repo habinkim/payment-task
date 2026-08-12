@@ -531,10 +531,27 @@ HTTP 타임아웃 설정(`connect-timeout`, `read-timeout`)은 향할 대상이 
 
 ---
 
+
+### 수평 확장 관련 (2026-08-12 검토)
+
+[ADR 0006](adr/0006-single-server-no-middleware.md)에 전제와 한계를 정리했다. 아직 손대지 않은 항목만 여기 남긴다.
+
+현재 정합성은 **UNIQUE 2개 + 조건부 UPDATE 2개 + CHECK 3개**가 떠받친다. 락은 0건이다. 이 구조가 유효한 조건(단일 행·고정 금액·단방향 상태 머신·한 행 안의 불변식)은 [ADR 0012](adr/0012-conditional-update-for-state-transition.md)에 정리했다 — **부분 취소, 지갑 간 이체, 일일 한도 중 하나라도 생기면 락을 다시 검토해야 한다.**
+
+| # | 항목 | 성격 | 판단 |
+|---|---|---|---|
+| A | `WalletChargeService`의 `DataIntegrityViolationException`을 같은 트랜잭션에서 잡는다 | 트랜잭션이 이미 rollback-only라 커밋 시 `UnexpectedRollbackException`. 금전 정합성은 UNIQUE가 지키나 **멱등 재요청이 200 대신 500**이 된다 | **H2에선 재현되지 않아 수정을 증명할 수 없다.** MySQL 테스트(항목 B)와 묶어야 의미가 있다 |
+| B | 동시성 테스트를 MySQL에서 | H2는 READ COMMITTED, InnoDB는 REPEATABLE READ | Testcontainers 도입. 새 의존성이라 별도 판단 |
+| C | 스케줄러 다중 인스턴스 중복 실행 | 정합성은 [ADR 0012](adr/0012-conditional-update-for-state-transition.md)가 지킨다. 남는 건 게이트웨이 호출 낭비 | ShedLock. **효율성 문제**라 우선순위 낮음 |
+| D | 같은 `merchantPaymentNo`에 다른 `amount`가 오면 기존 건 반환 | Stripe·Toss는 파라미터 불일치 에러를 낸다 | 요청 파라미터 해시 비교. API 계약 변경이라 별도 사이클 |
+| E | 차감에만 원장 테이블이 없다 | 결제 생성·충전에는 원장 + UNIQUE가 있는데 차감은 `wallet.balance` 갱신뿐 | 근본 해법이나 스키마 변경 범위가 크다. [ADR 0012](adr/0012-conditional-update-for-state-transition.md)의 CAS로 먼저 막았으나 **비대칭을 메운 것이 아니라 우회한 것**이다 |
+| F | `prod` 프로파일도 H2 인메모리 | 다중 인스턴스 시 DB가 인스턴스 수만큼 갈라진다 | 과제 명세가 H2를 요구. README에 단일 인스턴스 전제 명시로 갈음 |
+
 ## 변경 이력
 
 | 날짜 | 내용 |
 |---|---|
+| 2026-08-12 | 결제 상태 전이를 조건부 UPDATE로 전환(ADR 0012). 수평 확장 검토 중 이중 차감을 재현했고, `WHERE status not in (COMPLETED, FAILED)` 조건으로 확정이 한 번만 반영되도록 함. 경합 패배 시 `PAYMENT_ALREADY_SETTLED`(409) |
 | 2026-08-12 | 역할을 드러내는 이름으로 정정(ADR 0011). 우리가 PG이므로 외부 연동 타입을 `Gateway*` → `External*`, 패키지·설정 키를 `gateway` → `external`로 옮기고, 3rd party가 발급하는 결제번호를 `paymentNo` → `merchantPaymentNo`로 변경. API 요청·응답 키와 DB 컬럼 포함 |
 | 2026-08-12 | S6 지갑 충전 완료. `POST /api/v1/wallets/{walletId}/charge` 추가하고 이력을 `wallet_charge`(V3)에 별도 저장. `chargeNo` UNIQUE로 멱등을 보장하며 중복 요청은 409가 아니라 200과 최초 이력을 반환 |
 | 2026-08-11 | 저장소를 도메인 인터페이스와 인프라 구현으로 분리(ADR 0010). 인프라가 서비스를 역참조하던 순환을 제거하고, 페이징을 `PageQuery`·`PageResult` 도메인 타입으로 바꿔 스프링 데이터를 인프라 안으로 가둠. 의존 방향을 강제하는 아키텍처 규칙 4종 추가 |

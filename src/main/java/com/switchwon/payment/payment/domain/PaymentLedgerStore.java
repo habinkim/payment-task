@@ -10,7 +10,7 @@ public interface PaymentLedgerStore {
 
     Payment append(Payment payment);
 
-    void updateState(Payment payment);
+    boolean updateState(Payment payment);
 
     Optional<Payment> findByMerchantPaymentNo(String merchantPaymentNo);
 

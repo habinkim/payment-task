@@ -33,9 +33,17 @@ public class JpaPaymentLedgerStore implements PaymentLedgerStore {
     }
 
     @Override
-    public void updateState(Payment payment) {
-        repository.findByMerchantPaymentNo(payment.merchantPaymentNo())
-                .ifPresent(entity -> entity.applyState(payment, Instant.now(clock)));
+    public boolean updateState(Payment payment) {
+        return repository.updateStateIfNotTerminal(
+                payment.merchantPaymentNo(),
+                payment.status(),
+                payment.failureReason(),
+                payment.retriable(),
+                payment.externalTransactionId(),
+                payment.externalResponseCode(),
+                payment.requestedAt(),
+                payment.respondedAt(),
+                Instant.now(clock)) == 1;
     }
 
     @Override
